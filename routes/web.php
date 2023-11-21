@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\ImportController;
+use App\Http\Controllers\ParseSiteController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -17,9 +19,12 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/import/pornstars', [\App\Http\Controllers\ImportController::class, 'pornstars']);
-Route::get('/import/tags', [\App\Http\Controllers\ImportController::class, 'tags']);
-Route::get('/import/categories', [\App\Http\Controllers\ImportController::class, 'categories']);
+Route::get('/import/pornstars', [ImportController::class, 'pornstars']);
+Route::get('/import/tags', [ImportController::class, 'tags']);
+Route::get('/import/categories', [ImportController::class, 'categories']);
+Route::get('/import/sites', [ImportController::class, 'sites']);
+
+Route::get('/parse/sites/first/{id}', [ParseSiteController::class, 'first'])->name('parse-site-first');
 
 
 Route::group(['prefix' => 'admin'], function () {

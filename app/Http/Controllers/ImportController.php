@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pornstar;
+use App\Models\Site;
 use App\Models\Tag;
 use Illuminate\Http\Request;
 
@@ -101,6 +102,34 @@ class ImportController extends Controller
 
                 if (count($insertData) > 1000) {
                     Tag::upsert($insertData, ['external_id'], ['name']);
+                    $insertData = [];
+                }
+            }
+
+            fclose($handle);
+        }
+    }
+
+    public function sites()
+    {
+        $handle = fopen("/var/www/parser/app/Http/Controllers/sites.txt", "r");
+
+        $insertData = [];
+
+        if ($handle) {
+            while (($line = fgets($handle)) !== false) {
+
+                $line = trim(preg_replace('/\s\s+/', ' ', $line));
+                $domain = substr($line, 0, 255);
+                $fullDomain = 'https://' . $domain;
+
+                $insertData[] = [
+                    'domain' => $domain,
+                    'full_domain' => $fullDomain,
+                ];
+
+                if (count($insertData) > 1000) {
+                    Site::upsert($insertData, ['domain'], ['domain', 'full_domain']);
                     $insertData = [];
                 }
             }
