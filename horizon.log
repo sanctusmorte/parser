@@ -1,0 +1,18 @@
+Horizon started successfully.
+  2023-11-24 04:36:19 App\Jobs\FirstParseSiteJob ..................... RUNNING
+  2023-11-24 04:36:19 App\Jobs\FirstParseSiteJob ................ 33.46ms DONE
+  2023-11-24 04:36:43 App\Jobs\FirstParseSiteJob ..................... RUNNING
+  2023-11-24 04:36:43 App\Jobs\FirstParseSiteJob ................ 23.19ms DONE
+  2023-11-24 04:37:07 App\Jobs\FirstParseSiteJob ..................... RUNNING
+  2023-11-24 04:37:47 App\Jobs\FirstParseSiteJob ............ 39,694.93ms DONE
+  2023-11-24 04:53:47 App\Jobs\FirstParseSiteJob ..................... RUNNING
+  2023-11-24 04:54:27 App\Jobs\FirstParseSiteJob ............ 40,378.39ms FAIL
+  2023-11-24 04:55:41 App\Jobs\FirstParseSiteJob ..................... RUNNING
+  2023-11-24 04:56:21 App\Jobs\FirstParseSiteJob ............ 40,283.78ms FAIL
+  2023-11-24 04:58:12 App\Jobs\FirstParseSiteJob ..................... RUNNING
+  2023-11-24 04:58:53 App\Jobs\FirstParseSiteJob ............ 40,077.32ms FAIL
+  2023-11-24 05:03:41 App\Jobs\FirstParseSiteJob ..................... RUNNING
+  2023-11-24 05:04:20 App\Jobs\FirstParseSiteJob ............ 39,617.04ms FAIL
+Horizon started successfully.
+  2023-11-24 05:05:15 App\Jobs\FirstParseSiteJob ..................... RUNNING
+  2023-11-24 05:05:18 App\Jobs\FirstParseSiteJob ............. 2,730.50ms DONE

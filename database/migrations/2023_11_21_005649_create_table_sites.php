@@ -21,6 +21,9 @@ return new class extends Migration
             $table->integer('status')->default(0);
             $table->boolean('is_suitable')->nullable()->default(null);
             $table->boolean('is_first_parsed')->default(0);
+            $table->text('links')->nullable()->default(null);
+            $table->text('logs')->nullable()->default(null);
+            $table->string('type')->nullable()->default(null);
             $table->timestamps();
         });
     }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\GuzzleController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\ParseSiteController;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,7 @@ Route::get('/import/categories', [ImportController::class, 'categories']);
 Route::get('/import/sites', [ImportController::class, 'sites']);
 
 Route::get('/parse/sites/first/{id}', [ParseSiteController::class, 'first'])->name('parse-site-first');
+Route::get('/guzzle/get/{siteUrl}', [GuzzleController::class, 'test']);
 
 
 Route::group(['prefix' => 'admin'], function () {
