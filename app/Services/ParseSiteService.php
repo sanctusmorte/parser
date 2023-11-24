@@ -56,7 +56,7 @@ class ParseSiteService
                         $type = 'CJ';
                     }
 
-                    if ($redirectCount > 0) {
+                    if ($redirectCount > 0 && $notRedirectCount > 0) {
                         if (round($redirectCount / $notRedirectCount, 2) > 0.4) {
                             $type = 'CJ/Tube';
                         }
