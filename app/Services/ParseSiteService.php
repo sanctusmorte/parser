@@ -22,6 +22,7 @@ class ParseSiteService
         $existSite = Site::find($siteId);
         $data = [];
         $logs = [];
+        $type = '';
 
         if (!is_null($existSite)) {
 
