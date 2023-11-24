@@ -59,7 +59,11 @@ class DOMService
                 }
 
                 if (!str_contains($href, 'https://') && !str_contains($href, 'http://')) {
-                    $href = 'https://' . $domain . $href;
+                    if (str_starts_with($href, '/')) {
+                        $href = 'https://' . $domain . $href;
+                    } else {
+                        $href = 'https://' . $domain . '/' . $href;
+                    }
                 }
 
                 if (count($link->find('img')) > 0) {
