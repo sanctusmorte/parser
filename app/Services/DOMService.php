@@ -62,10 +62,8 @@ class DOMService
                     $href = 'https://' . $domain . $href;
                 }
 
-                foreach ($childrens as $children) {
-                    if ($children->getTag()->name() === 'img') {
-                        $needLinks[$link->id()] = $href;
-                    }
+                if (count($link->find('img')) > 0) {
+                    $needLinks[$link->id()] = $href;
                 }
             }
         }
