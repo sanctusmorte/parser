@@ -29,7 +29,133 @@ class DOMService
         return $html;
     }
 
-    public function getAllLinks(string $html, string $domain, $logs)
+    public function getMetaTitle(string $html): string
+    {
+        $title = '';
+
+        $html = $this->prepareHtml($html);
+        $dom = new Dom;
+        $dom->loadStr($html);
+        $result = $dom->find('title');
+
+        if ($result->count() > 0) {
+            $htmlNode = $result->toArray()[0];
+            if (!empty($htmlNode->getChildren())) {
+                $title = html_entity_decode($htmlNode->getChildren()[0]->text);
+            }
+        }
+
+        return substr($title, 0, 255);
+    }
+
+    public function getMetaDescription(string $html): string
+    {
+        $description = '';
+
+        $html = $this->prepareHtml($html);
+        $dom = new Dom;
+        $dom->loadStr($html);
+        $result = $dom->find('meta[name=description]');
+
+        if ($result->count() > 0) {
+            $htmlNode = $result->toArray()[0];
+            if (!empty($htmlNode->getTag())) {
+                $description = html_entity_decode($htmlNode->getTag()->getAttribute('content')['value']) ?? null;
+            }
+        }
+
+        return substr($description, 0, 5000);
+    }
+
+    public function getMetaKeywords(string $html): string
+    {
+        $keywords = '';
+
+        $html = $this->prepareHtml($html);
+        $dom = new Dom;
+        $dom->loadStr($html);
+        $result = $dom->find('meta[name=keywords]');
+
+        if ($result->count() > 0) {
+            $htmlNode = $result->toArray()[0];
+            if (!empty($htmlNode->getTag())) {
+                $keywords = html_entity_decode($htmlNode->getTag()->getAttribute('content')['value']) ?? null;
+            }
+        }
+
+        return substr($keywords, 0, 5000);
+    }
+
+    public function getHTags(string $html): array
+    {
+        $hTags = [];
+
+        $html = $this->prepareHtml($html);
+        $dom = new Dom;
+        $dom->loadStr($html);
+        $result = array_merge($dom->find('h1')->toArray(), $dom->find('h2')->toArray(), $dom->find('h3')->toArray());
+
+        if (count($result) > 0) {
+            foreach ($result as $htmlNode) {
+                $value = $htmlNode->find('text')->toArray();
+                $text = empty($value) ? '' : $value[0]->text;
+                $text = html_entity_decode($text);
+                $text = substr(trim($text), 0, 100);
+                if (strlen($text) > 1) {
+                    $hTags[$htmlNode->getTag()->name()][] = $text;
+                }
+
+            }
+        }
+
+        return $hTags;
+    }
+
+    public function getImgAlts(string $html): array
+    {
+        $imgAlts = [];
+
+        $html = $this->prepareHtml($html);
+        $dom = new Dom;
+        $dom->loadStr($html);
+        $result = $dom->find('img')->toArray();
+
+        if (count($result) > 0) {
+            foreach ($result as $htmlNode) {
+                $value = html_entity_decode($htmlNode->getTag()->getAttribute('alt')['value']);
+                $value = substr(trim($value), 0, 100);
+                if (strlen($value) > 1) {
+                    $imgAlts[] = $value;
+                }
+            }
+        }
+
+        return $imgAlts;
+    }
+
+    public function getHrefTitles(string $html): array
+    {
+        $hrefTitles = [];
+
+        $html = $this->prepareHtml($html);
+        $dom = new Dom;
+        $dom->loadStr($html);
+        $result = $dom->find('a')->toArray();
+
+        if (count($result) > 0) {
+            foreach ($result as $htmlNode) {
+                $value = substr(trim($htmlNode->getTag()->getAttribute('title')['value']), 0, 100);
+                if (strlen($value) > 1) {
+                    $hrefTitles[] = substr(trim($htmlNode->getTag()->getAttribute('title')['value']), 0, 100);
+                }
+            }
+        }
+
+        return $hrefTitles;
+    }
+
+
+    public function getAllLinks(string $html, string $domain)
     {
         $filteredLinks = [];
 
@@ -45,7 +171,6 @@ class DOMService
 
         if (!empty($links)) {
             foreach ($links as $link) {
-                $childrens = $link->getChildren() ?? [];
                 $href = $link->getAttribute('href');
 
                 $invalid = [];
@@ -88,6 +213,6 @@ class DOMService
             $logs[] = 'Нужных ссылок меньше 15, прекращаем парсинг!';
         }
 
-        return [$filteredLinks, $logs];
+        return $filteredLinks;
     }
 }

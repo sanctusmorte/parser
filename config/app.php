@@ -196,6 +196,8 @@ return [
         App\Providers\HorizonServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
+        Arcanedev\LogViewer\LogViewerServiceProvider::class,
+
     ],
 
     /*

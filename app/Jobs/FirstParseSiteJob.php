@@ -2,7 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Services\ParseSiteService;
+use App\Services\Parse\ParseSiteService;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -20,10 +21,18 @@ class FirstParseSiteJob implements ShouldQueue
     /**
      * Execute the job.
      *
-     * @return void
+     * @param ParseSiteService $parseSiteService
+     * @return int
+     * @throws Exception
      */
-    public function handle(ParseSiteService $parseSiteService)
+    public function handle(ParseSiteService $parseSiteService): int
     {
-        $parseSiteService->firstParse($this->siteId);
+        try {
+            $parseSiteService->parse($this->siteId);
+        } catch (Exception $e) {
+            throw new Exception();
+        }
+
+        return 1;
     }
 }

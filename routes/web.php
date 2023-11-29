@@ -25,8 +25,8 @@ Route::get('/import/tags', [ImportController::class, 'tags']);
 Route::get('/import/categories', [ImportController::class, 'categories']);
 Route::get('/import/sites', [ImportController::class, 'sites']);
 
-Route::get('/parse/sites/first/{id}', [ParseSiteController::class, 'first'])->name('parse-site-first');
-Route::get('/guzzle/get/{siteUrl}', [GuzzleController::class, 'test']);
+Route::get('/parse/sites/first/{id}/job', [ParseSiteController::class, 'parse'])->name('parse-site-first');
+Route::get('/parse/sites/first/{id}/debug', [ParseSiteController::class, 'parseDebug']);
 
 
 Route::group(['prefix' => 'admin'], function () {
