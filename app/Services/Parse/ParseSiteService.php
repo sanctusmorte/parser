@@ -55,7 +55,7 @@ class ParseSiteService
             $existSite = Site::find($siteId);
             if (!is_null($existSite)) {
                 $existSite->status = 3;
-                $existSite->save();;
+                $existSite->save();
             }
             throw new Exception();
         }
@@ -71,6 +71,14 @@ class ParseSiteService
             $trace = array_slice($e->getTrace(), 0, 3);;
             Log::error(sprintf(self::BAD_RESPONSE_ERROR, self::LINK, $linkId, $e->getMessage()), $trace);
         } catch (Exception $e) {
+
+            $existLink = Link::find($linkId);
+
+            if (!is_null($existLink)) {
+                $existLink->status = 3;
+                $existLink->save();
+            }
+
             throw new Exception();
         }
     }
@@ -125,10 +133,14 @@ class ParseSiteService
         try {
             $response = $this->guzzleService->getRequest($existLink->link_url);
         } catch (HttpClientException $e) {
+            $existLink->status = 3;
+            $existLink->save();
             throw new HttpClientException($e->getMessage(), $e->getCode(), $e);
         }
 
         if (!$response->ok()) {
+            $existLink->status = 3;
+            $existLink->save();
             throw new ParseSiteBadResponseException($response->body(), $response->status());
         }
 
