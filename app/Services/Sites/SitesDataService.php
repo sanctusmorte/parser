@@ -9,6 +9,6 @@ class SitesDataService
 {
     public function getLinksToParse(): array
     {
-        return Site::where(['status' => 0])->where('id', '<=', 100)->limit(3)->pluck('id')->toArray();
+        return Site::where(['status' => 0])->where('id', '<=', 500)->limit(1)->pluck('id')->toArray();
     }
 }
