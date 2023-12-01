@@ -57,7 +57,7 @@ class ParseSiteService
                 $existSite->status = 3;
                 $existSite->save();
             }
-            throw new Exception();
+            throw new Exception($e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -79,7 +79,7 @@ class ParseSiteService
                 $existLink->save();
             }
 
-            throw new Exception();
+            throw new Exception($e->getMessage(), $e->getCode(), $e);
         }
     }
 
