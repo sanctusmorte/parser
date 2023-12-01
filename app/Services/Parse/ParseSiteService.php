@@ -52,6 +52,11 @@ class ParseSiteService
             $trace = array_slice($e->getTrace(), 0, 3);;
             Log::error(sprintf(self::BAD_RESPONSE_ERROR, self::SITE, $siteId, $e->getMessage()), $trace);
         } catch (Exception $e) {
+            $existSite = Site::find($siteId);
+            if (!is_null($existSite)) {
+                $existSite->status = 3;
+                $existSite->save();;
+            }
             throw new Exception();
         }
     }
