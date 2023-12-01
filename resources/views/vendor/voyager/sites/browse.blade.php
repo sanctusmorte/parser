@@ -113,6 +113,7 @@
                                             </td>
                                         @endif
                                         @foreach($dataType->browseRows as $row)
+                                            {{ $data['links'] }}
                                             @php
                                                 if ($data->{$row->field.'_browse'}) {
                                                     $data->{$row->field} = $data->{$row->field.'_browse'};

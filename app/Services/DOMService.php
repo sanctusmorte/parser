@@ -165,8 +165,6 @@ class DOMService
         $dom->loadStr($html);
         $links = $dom->find('a');
 
-        $logs[] = 'Всего нашли ' . count($links) . ' ссылок на главной странице, теперь отфильтруем.';
-
         $needLinks = [];
 
         if (!empty($links)) {
@@ -197,20 +195,16 @@ class DOMService
             }
         }
 
-        $logs[] = 'Отфильтровали, подходящих ссылок - ' . count($links) . ' штук, теперь выбираем первые 15';
 
         if (count($needLinks) > 0) {
             foreach ($needLinks as $key => $linksId) {
                 if (!isset($filteredLinks[$key])) {
                     $filteredLinks[$key] = $linksId;
-                    if (count($filteredLinks) >= 15) {
-                        $logs[] = 'Выбрали первые 15, теперь начинаем проверять каждую ссылку - кидаем запрос и смотрим происходит ли редиректит на другой сайт';
+                    if (count($filteredLinks) >= 50) {
                         break;
                     }
                 }
             }
-        } else {
-            $logs[] = 'Нужных ссылок меньше 15, прекращаем парсинг!';
         }
 
         return $filteredLinks;

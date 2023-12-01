@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Link;
 use App\Models\Pornstar;
 use App\Models\Site;
 use App\Models\Tag;
@@ -114,6 +115,7 @@ class ImportController extends Controller
 
     public function sites()
     {
+        dd($links = Link::where('status', 0)->limit(50)->pluck('id')->toArray());
         $handle = fopen("/var/www/parser/app/Http/Controllers/sites.txt", "r");
 
         $insertData = [];
@@ -126,12 +128,11 @@ class ImportController extends Controller
                 $fullDomain = 'https://' . $domain;
 
                 $insertData[] = [
-                    'domain' => $domain,
-                    'full_domain' => $fullDomain,
+                    'link_url' => $fullDomain,
                 ];
 
                 if (count($insertData) > 1000) {
-                    Site::upsert($insertData, ['domain'], ['domain', 'full_domain']);
+                    Site::upsert($insertData, ['link_url'], ['link_url']);
                     $insertData = [];
                 }
             }

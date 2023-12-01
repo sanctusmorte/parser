@@ -2,6 +2,8 @@
 
 namespace App\Services\Parse;
 
+use App\Models\Link;
+use App\Models\LinkData;
 use App\Models\Site;
 use App\Services\DOMService;
 use App\Services\GuzzleService;
@@ -19,11 +21,14 @@ use PHPHtmlParser\Exceptions\CurlException;
 
 class ParseSiteService
 {
-    const MODEL_NOT_FOUND_ERROR = '[ID:%s][PARSE_SITE] Ошибка парсинга, сайт не найден в БД';
-    const BAD_RESPONSE_ERROR = '[ID:%s][PARSE_SITE] Ошибка парсинга - %s';
-    const DEBUG_START = '[PARSE_SITE] Начали парсить сайт [ID:%s]';
-    const DEBUG_GOT_HTML = '[PARSE_SITE] Успешно спарсили, разбираем HTML [ID:%s]';
-    const DEBUG_READY_TO_SAVE = '[PARSE_SITE] Разобрали HTML, вытащили данные, сохраняем [ID:%s]';
+    const MODEL_NOT_FOUND_ERROR = '[ID:%s][PARSE_%s] Ошибка парсинга, сайт не найден в БД';
+    const BAD_RESPONSE_ERROR = '[ID:%s][PARSE_%s] Ошибка парсинга - %s';
+    const DEBUG_START = '[PARSE_%s] Начали парсить сайт [ID:%s]';
+    const DEBUG_GOT_HTML = '[PARSE_%s] Успешно спарсили, разбираем HTML [ID:%s]';
+    const DEBUG_READY_TO_SAVE = '[PARSE_%s] Разобрали HTML, вытащили данные, сохраняем [ID:%s]';
+
+    const SITE = 'SITE';
+    const LINK = 'LINK';
 
     private GuzzleService $guzzleService;
     private DOMService $DOMService;
@@ -37,15 +42,29 @@ class ParseSiteService
     /**
      * @throws Exception
      */
-    public function parse(int $siteId): void
+    public function parseSite(int $siteId): void
     {
         try {
             $this->startParseSite($siteId);
         } catch (ModelNotFoundException) {
-            Log::error(sprintf(self::MODEL_NOT_FOUND_ERROR, $siteId));
+            Log::error(sprintf(self::MODEL_NOT_FOUND_ERROR, $siteId, self::SITE));
         } catch (HttpClientException|ParseSiteBadResponseException $e) {
             $trace = array_slice($e->getTrace(), 0, 3);;
-            Log::error(sprintf(self::BAD_RESPONSE_ERROR, $siteId, $e->getMessage()), $trace);
+            Log::error(sprintf(self::BAD_RESPONSE_ERROR, self::SITE, $siteId, $e->getMessage()), $trace);
+        } catch (Exception $e) {
+            throw new Exception();
+        }
+    }
+
+    public function parseLink(int $linkId): void
+    {
+        try {
+            $this->startParseLink($linkId);
+        } catch (ModelNotFoundException) {
+            Log::error(sprintf(self::MODEL_NOT_FOUND_ERROR, $linkId, self::LINK));
+        } catch (HttpClientException|ParseSiteBadResponseException $e) {
+            $trace = array_slice($e->getTrace(), 0, 3);;
+            Log::error(sprintf(self::BAD_RESPONSE_ERROR, self::LINK, $linkId, $e->getMessage()), $trace);
         } catch (Exception $e) {
             throw new Exception();
         }
@@ -62,19 +81,23 @@ class ParseSiteService
             throw new ModelNotFoundException();
         }
 
-        Log::debug(sprintf(self::DEBUG_START, $siteId));
+        Log::debug(sprintf(self::DEBUG_START, self::SITE, $siteId));
 
         try {
-            $response = $this->guzzleService->getRequest($existSite->full_domain);
+            $response = $this->guzzleService->getRequest($existSite->link_url);
         } catch (HttpClientException $e) {
+            $existSite->status = 3;
+            $existSite->save();
             throw new HttpClientException($e->getMessage(), $e->getCode(), $e);
         }
 
         if (!$response->ok()) {
+            $existSite->status = 3;
+            $existSite->save();
             throw new ParseSiteBadResponseException($response->body(), $response->status());
         }
 
-        Log::debug(sprintf(self::DEBUG_GOT_HTML, $siteId));
+        Log::debug(sprintf(self::DEBUG_GOT_HTML, self::SITE, $siteId));
 
         $html = $response->body();
         $response->close();
@@ -84,23 +107,104 @@ class ParseSiteService
         return 1;
     }
 
+    public function startParseLink(int $linkId): int
+    {
+        $existLink = Link::find($linkId);
+
+        if (is_null($existLink)) {
+            throw new ModelNotFoundException();
+        }
+
+        Log::debug(sprintf(self::DEBUG_START, self::SITE, $linkId));
+
+        try {
+            $response = $this->guzzleService->getRequest($existLink->link_url);
+        } catch (HttpClientException $e) {
+            throw new HttpClientException($e->getMessage(), $e->getCode(), $e);
+        }
+
+        if (!$response->ok()) {
+            throw new ParseSiteBadResponseException($response->body(), $response->status());
+        }
+
+        Log::debug(sprintf(self::DEBUG_GOT_HTML, self::SITE, $linkId));
+
+        $html = $response->body();
+        $response->close();
+
+        $this->setDataToLink($html, $existLink);
+
+        return 1;
+    }
+
+    private function setDataToLink(string $html, Link $link)
+    {
+        $linkData = LinkData::where('parent_link_id', $link->id)->first();
+
+        if (is_null($linkData)) {
+            $linkData = new LinkData();
+        }
+
+        $this->setLinkData($linkData, $html, 'link', $link->id);
+
+        $link->status = 1;
+        $link->link_data_id = $linkData->id;
+        $link->save();
+    }
+
     private function setDataToSite(string $html, Site $site)
     {
-        $links = $this->DOMService->getAllLinks($html, $site->domain);
+        $domain = strpos($site->link_url, 'http://') === false ? substr($site->link_url, 8) : ubstr($site->link_url, 7);
+        $links = $this->DOMService->getAllLinks($html, $domain);
 
-        $site->status = count($links) >= 10 ? 1 : 2;
-        $site->type = '';
-        $site->links = json_encode($links);
-        $site->meta_title = $this->DOMService->getMetaTitle($html);
-        $site->meta_description = $this->DOMService->getMetaDescription($html);
-        $site->meta_keywords = $this->DOMService->getMetaKeywords($html);
-        $site->h_tags = json_encode($this->DOMService->getHTags($html));
-        $site->img_alts = json_encode($this->DOMService->getImgAlts($html));
-        $site->href_titles = json_encode($this->DOMService->getHrefTitles($html));
+        $linkData = LinkData::where('parent_site_id', $site->id)->first();
 
-        Log::debug(sprintf(self::DEBUG_READY_TO_SAVE, $site->id));
+        if (is_null($linkData)) {
+            $linkData = new LinkData();
+        }
 
+        $this->setLinkData($linkData, $html, 'site', $site->id);
+
+        $site->status = count($links) >= 8 ? 1 : 2;
+        $site->link_data_id = $linkData->id;
         $site->save();
+
+        Link::upsert($this->getLinksInsertData($links, $site->id), ['link_url'], ['link_url', 'parent_id']);
+    }
+
+    private function getLinksInsertData(array $links, int $parentId): array
+    {
+        $linksInsertData = [];
+
+        foreach ($links as $link) {
+            $linksInsertData[] = [
+                'parent_id' => $parentId,
+                'link_url' => $link
+            ];
+        }
+
+        return $linksInsertData;
+    }
+
+    private function setLinkData(LinkData $linkData, string $html, string $parentType, int $parentId)
+    {
+        $linkData->type = '';
+        $linkData->meta_title = $this->DOMService->getMetaTitle($html);
+        $linkData->meta_description = $this->DOMService->getMetaDescription($html);
+        $linkData->meta_keywords = $this->DOMService->getMetaKeywords($html);
+        $linkData->h_tags = json_encode($this->DOMService->getHTags($html));
+        $linkData->img_alts = json_encode($this->DOMService->getImgAlts($html));
+        $linkData->href_titles = json_encode($this->DOMService->getHrefTitles($html));
+
+        if ($parentType === 'site') {
+            $linkData->parent_site_id = $parentId;
+        }
+
+        if ($parentType === 'link') {
+            $linkData->parent_link_id = $parentId;
+        }
+
+        $linkData->save();
     }
 
     private function checkLinks(array $links)

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Actions\FirstParseAction;
+use App\FormFields\LinkFormField;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Events\Dispatcher;
 use TCG\Voyager\Facades\Voyager;
@@ -27,5 +28,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         Voyager::addAction(FirstParseAction::class);
+        Voyager::addFormField(LinkFormField::class);
     }
 }

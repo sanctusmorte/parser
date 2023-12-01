@@ -27,6 +27,7 @@ Route::get('/import/sites', [ImportController::class, 'sites']);
 
 Route::get('/parse/sites/first/{id}/job', [ParseSiteController::class, 'parse'])->name('parse-site-first');
 Route::get('/parse/sites/first/{id}/debug', [ParseSiteController::class, 'parseDebug']);
+Route::get('/parse/links/{id}/debug', [ParseSiteController::class, 'parseLinkDebug']);
 
 
 Route::group(['prefix' => 'admin'], function () {

@@ -13,9 +13,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('sites', function (Blueprint $table) {
+        Schema::create('links', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('external_id')->nullable()->default(null);
+            $table->bigInteger('parent_id');
             $table->string('link_url')->unique();
             $table->integer('status')->default(0);
             $table->bigInteger('link_data_id')->nullable()->default(null);
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('sites');
+        Schema::dropIfExists('links');
     }
 };
