@@ -32,7 +32,7 @@ class ParseLinksJob implements ShouldQueue
         try {
             $parseSiteService->parseLink($this->siteId);
         } catch (Exception $e) {
-            Log::error('Ошибка парсинга линки', [$e->getMessage(), $e->getTrace()]);
+            Log::error('Ошибка парсинга линки [ID - ' . $this->siteId . ']', [$e->getMessage(), $e->getTrace()]);
         }
 
         return 1;

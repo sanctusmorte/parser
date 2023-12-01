@@ -31,7 +31,7 @@ class ParseSiteJob implements ShouldQueue
         try {
             $parseSiteService->parseSite($this->siteId);
         } catch (Exception $e) {
-            Log::error('Ошибка парсинга сайта', [$e->getMessage(), $e->getTrace()]);
+            Log::error('Ошибка парсинга сайта [ID - ' . $this->siteId . ']', [$e->getMessage(), $e->getTrace()]);
         }
 
         return 1;
