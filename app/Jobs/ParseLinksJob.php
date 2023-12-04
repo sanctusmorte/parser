@@ -16,7 +16,7 @@ class ParseLinksJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public function __construct(
-        public int $siteId,
+        public int $siteId
     ) {}
 
 

@@ -24,9 +24,8 @@ class ParseSiteController extends Controller
 
     public function parseLinkDebug(int $linkId, ParseSiteService $service)
     {
-        dd(Site::where(['status' => 0])->where('id', '<=', 100)->limit(1)->pluck('id')->toArray());
       // dispatch(new ParseLinksJob($linkId));
       //  ParseLinkJob::dispatch($linkId);
-        //$service->parseLink($linkId);
+        $service->parseLink($linkId);
     }
 }

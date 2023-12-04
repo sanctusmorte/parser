@@ -165,20 +165,30 @@ class DOMService
         $dom->loadStr($html);
         $links = $dom->find('a');
 
+        $invalid = [];
+        $invalid[] = 'https://' . $domain;
+        $invalid[] = 'https://' . $domain . '/';
+        $invalid[] = 'http://' . $domain;
+        $invalid[] = 'http://' . $domain . '/';
+
         $needLinks = [];
 
         if (!empty($links)) {
             foreach ($links as $link) {
+
                 $href = $link->getAttribute('href');
-
-                $invalid = [];
-                $invalid[] = 'https://' . $domain;
-                $invalid[] = 'https://' . $domain . '/';
-                $invalid[] = 'http://' . $domain;
-                $invalid[] = 'http://' . $domain . '/';
-
                 if (in_array($href, $invalid)) {
                     continue;
+                }
+
+                $title = null;
+                $anotherLinks = $dom->find('a[href="'.$href.'"]')->toArray();
+
+                foreach ($anotherLinks as $anotherLink) {
+                    $anotherLinkText = trim($anotherLink->text);
+                    if ($anotherLink->id() !== $link->id() && strlen($anotherLinkText) > 3) {
+                        $title = $anotherLinkText;
+                    }
                 }
 
                 if (!str_contains($href, 'https://') && !str_contains($href, 'http://')) {
@@ -189,24 +199,15 @@ class DOMService
                     }
                 }
 
-                if (count($link->find('img')) > 0) {
-                    $needLinks[$link->id()] = $href;
+                if (count($link->find('img')) > 0 && str_contains($href, $domain) && strlen($title) > 3) {
+                    $needLinks[$link->id()] = [
+                        'href' => $href,
+                        'title' => $title
+                    ];
                 }
             }
         }
 
-
-        if (count($needLinks) > 0) {
-            foreach ($needLinks as $key => $linksId) {
-                if (!isset($filteredLinks[$key])) {
-                    $filteredLinks[$key] = $linksId;
-                    if (count($filteredLinks) >= 50) {
-                        break;
-                    }
-                }
-            }
-        }
-
-        return $filteredLinks;
+        return $needLinks;
     }
 }

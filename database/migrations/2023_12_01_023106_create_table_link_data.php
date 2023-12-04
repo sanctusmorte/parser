@@ -21,10 +21,13 @@ return new class extends Migration
             $table->string('meta_title')->nullable()->default(null);
             $table->text('meta_description')->nullable()->default(null);
             $table->text('meta_keywords')->nullable()->default(null);
-            $table->json('h_tags')->nullable()->default(null);
-            $table->json('img_alts')->nullable()->default(null);
-            $table->json('href_titles')->nullable()->default(null);
+            $table->text('h_tags')->nullable()->default(null);
+            $table->text('img_alts')->nullable()->default(null);
+            $table->text('href_titles')->nullable()->default(null);
+            $table->boolean('is_redirect')->nullable()->default(null);
             $table->boolean('is_video_content')->nullable()->default(null);
+            $table->integer('content_type')->nullable()->default(null);
+            $table->text('content_thumb')->nullable()->default(null);
             $table->timestamps();
         });
     }

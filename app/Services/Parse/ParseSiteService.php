@@ -2,11 +2,14 @@
 
 namespace App\Services\Parse;
 
+use App\Console\Commands\ParseLinksLevelOneCommand;
+use App\Jobs\ParseLinksJob;
 use App\Models\Link;
 use App\Models\LinkData;
 use App\Models\Site;
 use App\Services\DOMService;
 use App\Services\GuzzleService;
+use App\Services\Links\LinksService;
 use App\Services\Parse\Exceptions\ParseSiteBadResponseException;
 use Exception;
 use GuzzleHttp\Exception\BadResponseException;
@@ -32,11 +35,13 @@ class ParseSiteService
 
     private GuzzleService $guzzleService;
     private DOMService $DOMService;
+    private LinksService $linksService;
 
-    public function __construct(GuzzleService $guzzleService, DOMService $DOMService)
+    public function __construct(GuzzleService $guzzleService, DOMService $DOMService, LinksService $linksService)
     {
         $this->guzzleService = $guzzleService;
         $this->DOMService = $DOMService;
+        $this->linksService = $linksService;
     }
 
     /**
@@ -52,6 +57,7 @@ class ParseSiteService
             $trace = array_slice($e->getTrace(), 0, 3);;
             Log::error(sprintf(self::BAD_RESPONSE_ERROR, self::SITE, $siteId, $e->getMessage()), $trace);
         } catch (Exception $e) {
+            dd($e);
             $existSite = Site::find($siteId);
             if (!is_null($existSite)) {
                 $existSite->status = 3;
@@ -61,23 +67,24 @@ class ParseSiteService
         }
     }
 
-    public function parseLink(int $linkId): void
+    public function parseLink(int $linkId, ?int $level = null): void
     {
         try {
-            $this->startParseLink($linkId);
+            $this->startParseLink($linkId, $level);
         } catch (ModelNotFoundException) {
             Log::error(sprintf(self::MODEL_NOT_FOUND_ERROR, $linkId, self::LINK));
         } catch (HttpClientException|ParseSiteBadResponseException $e) {
             $trace = array_slice($e->getTrace(), 0, 3);;
             Log::error(sprintf(self::BAD_RESPONSE_ERROR, self::LINK, $linkId, $e->getMessage()), $trace);
         } catch (Exception $e) {
-
             $existLink = Link::find($linkId);
 
             if (!is_null($existLink)) {
                 $existLink->status = 3;
                 $existLink->save();
             }
+
+            Log::error('awdawdd', [$e->getMessage()]);
 
             throw new Exception($e->getMessage(), $e->getCode(), $e);
         }
@@ -100,6 +107,7 @@ class ParseSiteService
             $response = $this->guzzleService->getRequest($existSite->link_url);
         } catch (HttpClientException $e) {
             $existSite->status = 3;
+
             $existSite->save();
             throw new HttpClientException($e->getMessage(), $e->getCode(), $e);
         }
@@ -112,15 +120,20 @@ class ParseSiteService
 
         Log::debug(sprintf(self::DEBUG_GOT_HTML, self::SITE, $siteId));
 
+        $isRedirect = false;
         $html = $response->body();
+        $headers = $response->headers();
+        if (isset($headers['X-Guzzle-Redirect-History'])) {
+            $isRedirect = true;
+        }
         $response->close();
 
-        $this->setDataToSite($html, $existSite);
+        $this->setDataToSite($html, $existSite, $isRedirect);
 
         return 1;
     }
 
-    public function startParseLink(int $linkId): int
+    public function startParseLink(int $linkId, ?int $level = null): int
     {
         $existLink = Link::find($linkId);
 
@@ -146,33 +159,72 @@ class ParseSiteService
 
         Log::debug(sprintf(self::DEBUG_GOT_HTML, self::SITE, $linkId));
 
+        $isRedirect = false;
         $html = $response->body();
+        $headers = $response->headers();
+        $domain = substr($existLink->link_url, 8);
+        if (isset($headers['X-Guzzle-Redirect-History'])) {
+            $redirectLink = $headers['X-Guzzle-Redirect-History'][0];
+            if (!str_contains($redirectLink, $domain)) {
+                $isRedirect = true;
+            }
+
+        }
+
         $response->close();
 
-        $this->setDataToLink($html, $existLink);
+        $this->setDataToLink($html, $existLink, $isRedirect, $level);
 
         return 1;
     }
 
-    private function setDataToLink(string $html, Link $link)
+    private function getRandomLinks(array $links): array
     {
+        $data = [];
+        $ids = array_rand($links, 30);
+
+        foreach ($ids as $id) {
+            $data[] = $links[$id];
+        }
+
+        return $data;
+    }
+
+    private function setDataToLink(string $html, Link $link, int $isRedirect, ?int $level = null)
+    {
+        $domain = $this->getDomainFromLinkUrl($link->link_url);
         $linkData = LinkData::where('parent_link_id', $link->id)->first();
+        $links = $this->DOMService->getAllLinks($html, $domain);
+        $randomLinks = $this->getRandomLinks($links);
+        $thumbsTypes = $this->linksService->getThumbsTypesByLinks($links);
+
+        if (empty($thumbsTypes)) {
+            $thumbsTypes = ['test'];
+        }
 
         if (is_null($linkData)) {
             $linkData = new LinkData();
         }
 
-        $this->setLinkData($linkData, $html, 'link', $link->id);
+        $linkData = $this->setLinkData($linkData, $html, 'link', $link->id, $isRedirect, $level, thumbsTypes: $thumbsTypes);
+        $linkData->refresh();
 
         $link->status = 1;
         $link->link_data_id = $linkData->id;
+
         $link->save();
     }
 
-    private function setDataToSite(string $html, Site $site)
+    private function getDomainFromLinkUrl(string $linkUrl): string
     {
-        $domain = strpos($site->link_url, 'http://') === false ? substr($site->link_url, 8) : ubstr($site->link_url, 7);
+        return strpos($linkUrl, 'http://') === false ? substr($linkUrl, 8) : substr($linkUrl, 7);
+    }
+
+    private function setDataToSite(string $html, Site $site, int $isRedirect)
+    {
+        $domain = $this->getDomainFromLinkUrl($site->link_url);
         $links = $this->DOMService->getAllLinks($html, $domain);
+        $thumbsTypes = $this->linksService->getThumbsTypesByLinks($links);
 
         $linkData = LinkData::where('parent_site_id', $site->id)->first();
 
@@ -180,13 +232,18 @@ class ParseSiteService
             $linkData = new LinkData();
         }
 
-        $this->setLinkData($linkData, $html, 'site', $site->id);
+        $linkData = $this->setLinkData($linkData, $html, 'site', $site->id, $isRedirect, null, $thumbsTypes);
+
 
         $site->status = count($links) >= 8 ? 1 : 2;
         $site->link_data_id = $linkData->id;
         $site->save();
 
+        $linkData->save();
+
         Link::upsert($this->getLinksInsertData($links, $site->id), ['link_url'], ['link_url', 'parent_id']);
+
+        $this->linksService->parseLinksForSite($site->id);
     }
 
     private function getLinksInsertData(array $links, int $parentId): array
@@ -194,16 +251,21 @@ class ParseSiteService
         $linksInsertData = [];
 
         foreach ($links as $link) {
+            if (count($linksInsertData) >= 10) {
+                break;
+            }
             $linksInsertData[] = [
                 'parent_id' => $parentId,
-                'link_url' => $link
+                'link_url' => $link['href'],
+                'level' => 1,
+                'status' => 0,
             ];
         }
 
         return $linksInsertData;
     }
 
-    private function setLinkData(LinkData $linkData, string $html, string $parentType, int $parentId)
+    private function setLinkData(LinkData $linkData, string $html, string $parentType, int $parentId, int $isRedirect, ?int $level = null, ?array $thumbsTypes = null)
     {
         $linkData->type = '';
         $linkData->meta_title = $this->DOMService->getMetaTitle($html);
@@ -211,7 +273,13 @@ class ParseSiteService
         $linkData->meta_keywords = $this->DOMService->getMetaKeywords($html);
         $linkData->h_tags = json_encode($this->DOMService->getHTags($html));
         $linkData->img_alts = json_encode($this->DOMService->getImgAlts($html));
+        $linkData->is_redirect = $isRedirect;
         $linkData->href_titles = json_encode($this->DOMService->getHrefTitles($html));
+        $linkData->content_thumb = json_encode($thumbsTypes);
+
+        if (!is_null($level)) {
+            $linkData->level = $level;
+        }
 
         if ($parentType === 'site') {
             $linkData->parent_site_id = $parentId;
@@ -221,7 +289,7 @@ class ParseSiteService
             $linkData->parent_link_id = $parentId;
         }
 
-        $linkData->save();
+        return $linkData;
     }
 
     private function checkLinks(array $links)

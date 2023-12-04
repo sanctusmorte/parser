@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->bigInteger('parent_id');
             $table->string('link_url')->unique();
+            $table->integer('level')->nullable()->default(null);
             $table->integer('status')->default(0);
             $table->bigInteger('link_data_id')->nullable()->default(null);
             $table->timestamps();

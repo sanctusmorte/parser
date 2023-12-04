@@ -35,8 +35,6 @@ class ImportController extends Controller
                     'external_full_name' => $externalFullName,
                     'status' => 0,
                     'is_changeable' => 1,
-                    'is_main_page' => 1,
-                    'is_video_content' => 0,
                 ];
 
                 if (count($insertData) > 1000) {
@@ -66,7 +64,7 @@ class ImportController extends Controller
 
                 $insertData[] = [
                     'external_id' => $externalId,
-                    'name' => $name,
+                    'name' => strtolower($name),
                     'status' => 0,
                     'is_changeable' => 1,
                 ];
@@ -115,7 +113,6 @@ class ImportController extends Controller
 
     public function sites()
     {
-        dd($links = Link::where('status', 0)->limit(50)->pluck('id')->toArray());
         $handle = fopen("/var/www/parser/app/Http/Controllers/sites.txt", "r");
 
         $insertData = [];
