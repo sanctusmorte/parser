@@ -13,8 +13,8 @@ class Kernel extends ConsoleKernel
 {
     protected function schedule(Schedule $schedule): void
     {
-        $schedule->command(ParseLinksLevelOneCommand::class)->everyMinute();
-        $schedule->command(ParseSitesCommand::class)->everyMinute();
+        //$schedule->command(ParseLinksLevelOneCommand::class)->everyMinute();
+       // $schedule->command(ParseSitesCommand::class)->everyMinute();
 
         $schedule->call(function () {
             Artisan::call('horizon:snapshot');

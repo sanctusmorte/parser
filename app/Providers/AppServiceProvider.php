@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Actions\FirstParseAction;
+use App\Actions\SeeLinksMasksAction;
 use App\FormFields\LinkFormField;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Events\Dispatcher;
@@ -28,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         Voyager::addAction(FirstParseAction::class);
+        Voyager::addAction(SeeLinksMasksAction::class);
         Voyager::addFormField(LinkFormField::class);
     }
 }

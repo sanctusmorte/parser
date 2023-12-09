@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('link_url')->unique();
             $table->integer('level')->nullable()->default(null);
             $table->integer('status')->default(0);
+            $table->json('mask_ids')->nullable()->default(null);
             $table->bigInteger('link_data_id')->nullable()->default(null);
             $table->timestamps();
         });

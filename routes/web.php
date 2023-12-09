@@ -1,8 +1,11 @@
 <?php
 
+use App\Http\Controllers\Admin\VoyagerSitesFilteredController;
 use App\Http\Controllers\GuzzleController;
 use App\Http\Controllers\ImportController;
+use App\Http\Controllers\MaskController;
 use App\Http\Controllers\ParseSiteController;
+
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,7 +32,13 @@ Route::get('/parse/sites/first/{id}/job', [ParseSiteController::class, 'parse'])
 Route::get('/parse/sites/first/{id}/debug', [ParseSiteController::class, 'parseDebug']);
 Route::get('/parse/links/{id}/debug', [ParseSiteController::class, 'parseLinkDebug']);
 
+Route::get('/parse/masks/{id}', [MaskController::class, 'index']);
+
 
 Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();
+
+    Route::get('/sites-filtered', [VoyagerSitesFilteredController::class, 'index'])->name('voyager.sites-filtered.index');
+    Route::get('/sites/{id}/masks', [VoyagerSitesFilteredController::class, 'show'])->name('voyager.sites-filtered.show');
+
 });

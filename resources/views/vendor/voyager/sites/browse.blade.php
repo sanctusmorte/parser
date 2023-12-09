@@ -101,6 +101,7 @@
                                             @endif
                                         </th>
                                     @endforeach
+                                    <th>Ссылки</th>
                                     <th class="actions text-right dt-not-orderable">{{ __('voyager::generic.actions') }}</th>
                                 </tr>
                                 </thead>
@@ -113,7 +114,6 @@
                                             </td>
                                         @endif
                                         @foreach($dataType->browseRows as $row)
-                                            {{ $data['links'] }}
                                             @php
                                                 if ($data->{$row->field.'_browse'}) {
                                                     $data->{$row->field} = $data->{$row->field.'_browse'};
@@ -253,6 +253,11 @@
                                                 @endif
                                             </td>
                                         @endforeach
+                                        <td>
+                                            @if(!empty($data->links()->get()[0]))
+                                                <a target="_blank" href="{{route('voyager.links.index')}}?key=parent_id&filter=equals&s={{$data->links()->get()[0]->parent_id}}">{{ $data->links()->count() }}</a>
+                                            @endif
+                                        </td>
                                         <td class="no-sort no-click bread-actions">
                                             @foreach($actions as $action)
                                                 @if (!method_exists($action, 'massAction'))

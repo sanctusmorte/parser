@@ -13,6 +13,7 @@
         "laravel/sanctum": "^3.0",
         "laravel/tinker": "^2.7",
         "paquettg/php-html-parser": "^2.2",
+        "staudenmeir/eloquent-json-relations": "^1.7",
         "tcg/voyager": "^1.7"
     },
     "require-dev": {

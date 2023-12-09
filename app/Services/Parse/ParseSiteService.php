@@ -3,6 +3,7 @@
 namespace App\Services\Parse;
 
 use App\Console\Commands\ParseLinksLevelOneCommand;
+use App\Jobs\HandleSiteMasksJob;
 use App\Jobs\ParseLinksJob;
 use App\Models\Link;
 use App\Models\LinkData;
@@ -57,7 +58,6 @@ class ParseSiteService
             $trace = array_slice($e->getTrace(), 0, 3);;
             Log::error(sprintf(self::BAD_RESPONSE_ERROR, self::SITE, $siteId, $e->getMessage()), $trace);
         } catch (Exception $e) {
-            dd($e);
             $existSite = Site::find($siteId);
             if (!is_null($existSite)) {
                 $existSite->status = 3;
@@ -130,6 +130,8 @@ class ParseSiteService
 
         $this->setDataToSite($html, $existSite, $isRedirect);
 
+        HandleSiteMasksJob::dispatch($siteId);
+
         return 1;
     }
 
@@ -196,7 +198,8 @@ class ParseSiteService
         $linkData = LinkData::where('parent_link_id', $link->id)->first();
         $links = $this->DOMService->getAllLinks($html, $domain);
         $randomLinks = $this->getRandomLinks($links);
-        $thumbsTypes = $this->linksService->getThumbsTypesByLinks($links);
+       // $thumbsTypes = $this->linksService->getThumbsTypesByLinks($links);
+        $thumbsTypes = [];
 
         if (empty($thumbsTypes)) {
             $thumbsTypes = ['test'];
@@ -222,9 +225,15 @@ class ParseSiteService
 
     private function setDataToSite(string $html, Site $site, int $isRedirect)
     {
-        $domain = $this->getDomainFromLinkUrl($site->link_url);
-        $links = $this->DOMService->getAllLinks($html, $domain);
-        $thumbsTypes = $this->linksService->getThumbsTypesByLinks($links);
+        try {
+            $domain = $this->getDomainFromLinkUrl($site->link_url);
+            $links = $this->DOMService->getAllLinks($html, $domain);
+           // $thumbsTypes = $this->linksService->getThumbsTypesByLinks($links);
+            $thumbsTypes = [];
+        } catch (Exception $e) {
+            dd($e);
+            throw new Exception();
+        }
 
         $linkData = LinkData::where('parent_site_id', $site->id)->first();
 
