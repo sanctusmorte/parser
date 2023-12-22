@@ -9,6 +9,11 @@ class SitesDataService
 {
     public function getLinksToParse(): array
     {
-        return Site::where(['status' => 0])->where('id', '<=', 100)->limit(1)->pluck('id')->toArray();
+        return Site::where(['status' => 0])->where('id', '<=', 100)->limit(10)->pluck('id')->toArray();
+    }
+
+    public function getSitesWithoutThumbsType(): array
+    {
+        return Site::where(['status' => 1, 'is_thubms_type_parsed' => 0])->limit(5)->pluck('id')->toArray();
     }
 }

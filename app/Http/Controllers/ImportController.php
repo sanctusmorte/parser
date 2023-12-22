@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Link;
 use App\Models\Pornstar;
+use App\Models\Proxy;
 use App\Models\Site;
 use App\Models\Tag;
 use Illuminate\Http\Request;
@@ -28,14 +29,16 @@ class ImportController extends Controller
                 $firstName = $names[0] ?? '';
                 $lastName = $names[1] ?? '';
 
-                $insertData[] = [
-                    'external_id' => $externalId,
-                    'first_name' => $firstName,
-                    'last_name' => $lastName,
-                    'external_full_name' => $externalFullName,
-                    'status' => 0,
-                    'is_changeable' => 1,
-                ];
+                if (!isset($insertData[$externalFullName])) {
+                    $insertData[$externalFullName] = [
+                        'external_id' => $externalId,
+                        'first_name' => $firstName,
+                        'last_name' => $lastName,
+                        'external_full_name' => $externalFullName,
+                        'status' => 0,
+                        'is_changeable' => 1,
+                    ];
+                }
 
                 if (count($insertData) > 1000) {
                     Pornstar::upsert($insertData, ['external_id'], ['first_name', 'last_name', 'external_full_name']);
@@ -45,6 +48,33 @@ class ImportController extends Controller
 
             fclose($handle);
         }
+    }
+
+    public function proxies()
+    {
+        $handle = fopen("/var/www/parser/app/Http/Controllers/proxies.txt", "r");
+
+        $insertData = [];
+
+        if ($handle) {
+            while (($line = fgets($handle)) !== false) {
+
+                $line = trim(preg_replace('/\s\s+/', ' ', $line));
+                $data = explode(':', $line);
+                $ip = $data[0];
+                $port = $data[1];
+
+                $insertData[] = [
+                    'ip' => $ip,
+                    'port' => $port,
+                    'status' => 0,
+                ];
+            }
+
+            fclose($handle);
+        }
+
+        Proxy::upsert($insertData, ['ip', 'port'], ['ip', 'port']);
     }
 
     public function tags()

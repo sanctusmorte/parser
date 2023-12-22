@@ -21,8 +21,6 @@ class LinkData extends Model
         'meta_description',
         'meta_keywords',
         'h_tags',
-        'img_alts',
-        'href_titles',
         'is_video_content',
         'is_redirect',
         'content_type',

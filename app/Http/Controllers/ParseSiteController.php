@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Jobs\ParseSiteJob;
 use App\Jobs\ParseLinksJob;
 use App\Models\Site;
+use App\Services\Links\LinksService;
 use App\Services\Parse\ParseSiteService;
+use App\Services\Thumbs\ThumbsService;
 use Exception;
 
 class ParseSiteController extends Controller
@@ -28,4 +30,10 @@ class ParseSiteController extends Controller
       //  ParseLinkJob::dispatch($linkId);
         $service->parseLink($linkId);
     }
+
+    public function parseThumbTypeForSite(int $siteId, ThumbsService $service)
+    {
+        $service->parseThumbsTypeForSite($siteId);
+    }
+
 }

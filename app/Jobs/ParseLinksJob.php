@@ -16,7 +16,7 @@ class ParseLinksJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public function __construct(
-        public int $siteId
+        public int $linkId
     ) {}
 
 
@@ -30,9 +30,9 @@ class ParseLinksJob implements ShouldQueue
     public function handle(ParseSiteService $parseSiteService): int
     {
         try {
-            $parseSiteService->parseLink($this->siteId);
+            $parseSiteService->parseLink($this->linkId);
         } catch (Exception $e) {
-            Log::error('Ошибка парсинга линки [ID - ' . $this->siteId . ']', [$e->getMessage(), $e->getTrace()]);
+            Log::error('Ошибка парсинга линки [ID - ' . $this->linkId . ']', [$e->getMessage(), $e->getTrace()]);
         }
 
         return 1;

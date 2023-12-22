@@ -18,6 +18,7 @@ return new class extends Migration
             $table->bigInteger('external_id')->nullable()->default(null);
             $table->string('link_url')->unique();
             $table->integer('status')->default(0);
+            $table->tinyInteger('is_thubms_type_parsed')->default(0);
             $table->bigInteger('link_data_id')->nullable()->default(null);
             $table->timestamps();
         });

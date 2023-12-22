@@ -18,7 +18,7 @@ return new class extends Migration
             $table->bigInteger('external_id');
             $table->string('first_name')->nullable();
             $table->string('last_name')->nullable();
-            $table->string('external_full_name');
+            $table->string('external_full_name')->unique();
             $table->integer('status')->default(0);
             $table->boolean('is_changeable');
             $table->timestamps();

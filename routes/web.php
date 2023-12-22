@@ -27,12 +27,14 @@ Route::get('/import/pornstars', [ImportController::class, 'pornstars']);
 Route::get('/import/tags', [ImportController::class, 'tags']);
 Route::get('/import/categories', [ImportController::class, 'categories']);
 Route::get('/import/sites', [ImportController::class, 'sites']);
+Route::get('/import/proxies', [ImportController::class, 'proxies']);
 
 Route::get('/parse/sites/first/{id}/job', [ParseSiteController::class, 'parse'])->name('parse-site-first');
 Route::get('/parse/sites/first/{id}/debug', [ParseSiteController::class, 'parseDebug']);
 Route::get('/parse/links/{id}/debug', [ParseSiteController::class, 'parseLinkDebug']);
 
 Route::get('/parse/masks/{id}', [MaskController::class, 'index']);
+Route::get('/parse/thumbs/site/{id}', [ParseSiteController::class, 'parseThumbTypeForSite']);
 
 
 Route::group(['prefix' => 'admin'], function () {

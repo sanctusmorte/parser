@@ -4,6 +4,7 @@ namespace App\Console;
 
 use App\Console\Commands\ParseLinksLevelOneCommand;
 use App\Console\Commands\ParseSitesCommand;
+use App\Console\Commands\ParseThumbsTypeForSitesCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Facades\Artisan;
@@ -13,13 +14,14 @@ class Kernel extends ConsoleKernel
 {
     protected function schedule(Schedule $schedule): void
     {
-        //$schedule->command(ParseLinksLevelOneCommand::class)->everyMinute();
-       // $schedule->command(ParseSitesCommand::class)->everyMinute();
+        $schedule->command(ParseLinksLevelOneCommand::class)->everyMinute();
+        $schedule->command(ParseSitesCommand::class)->everyMinute();
+        $schedule->command(ParseThumbsTypeForSitesCommand::class)->everyMinute();
 
-        $schedule->call(function () {
-            Artisan::call('horizon:snapshot');
-            Log::debug('horizon:snapshot');
-        })->everyFiveMinutes();
+//        $schedule->call(function () {
+//            Artisan::call('horizon:snapshot');
+//            Log::debug('horizon:snapshot');
+//        })->everyFiveMinutes();
 
     }
 

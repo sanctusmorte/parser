@@ -31,7 +31,7 @@ class MasksService
 
         foreach ($linksMasks as $linksMask) {
             foreach ($links as $link) {
-                if (str_contains(strtolower($link->link_url), strtolower($linksMask->name))) {
+                if (str_contains(strtolower($link->path_url), strtolower($linksMask->name))) {
                     $grouped[$linksMask->id] = isset($grouped[$linksMask->id]) ? $grouped[$linksMask->id] + 1 : 1;
                     if (!isset($linksGrouped[$link->link_url])) {
                         $linksGrouped[$link->link_url] = [$linksMask->id];

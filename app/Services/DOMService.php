@@ -133,7 +133,7 @@ class DOMService
         return $imgAlts;
     }
 
-    public function getHrefTitles(string $html): array
+    public function getHrefTitles(string $html, string $linkUrl): array
     {
         $hrefTitles = [];
 
@@ -141,23 +141,100 @@ class DOMService
         $dom = new Dom;
         $dom->loadStr($html);
         $result = $dom->find('a')->toArray();
+        $usedHrefs = [];
+        $usedTitles = [];
 
         if (count($result) > 0) {
             foreach ($result as $htmlNode) {
-                $value = substr(trim($htmlNode->getTag()->getAttribute('title')['value']), 0, 100);
-                if (strlen($value) > 1) {
-                    $hrefTitles[] = substr(trim($htmlNode->getTag()->getAttribute('title')['value']), 0, 100);
+                $title = $htmlNode->getTag()->getAttribute('title')['value'] ?? null;
+                $href = $htmlNode->getTag()->getAttribute('href')['value'] ?? null;
+
+                if (is_null($title) or is_null($href)) {
+                    continue;
                 }
+
+                if ($href === $linkUrl or $href === $linkUrl . '/') {
+                    continue;
+                }
+
+                $title = substr(trim($title), 0, 100);
+                $title = preg_replace('/[0-9]+/', '', $title);
+                $title = str_replace(':', '', $title);
+                $title = str_replace('Movies', '', $title);
+                $title = trim($title);
+
+                if (strlen($title) < 3) {
+                    continue;
+                }
+
+
+                $needTitles = [];
+
+                foreach ([',', '+', 'and', ' '] as $separator) {
+                    if (str_contains($title, $separator)) {
+                        $explodeItems = explode($separator, $title);
+                        foreach ($explodeItems as $explodeItem) {
+                            if (strlen($explodeItem) >= 2) {
+                                $explodeItem = str_replace(':', '', $explodeItem);
+                                $explodeItem = str_replace('+', '', $explodeItem);
+                                $explodeItem = trim($explodeItem);
+                                $needTitles[] = $explodeItem;
+                            }
+                        }
+                    }
+                }
+
+                $needTitles[] = $title;
+
+                foreach ($needTitles as $title) {
+                    if (!isset($usedHrefs[$href])) {
+                        $usedHrefs[$href] = 1;
+                        if (!isset($usedTitles[$title])) {
+                            $hrefTitles[] = $title;
+                            $usedTitles[$title] = 1;
+                        }
+                    }
+                }
+            }
+        }
+
+        foreach ($hrefTitles as $hrefTitleKey => $hrefTitle) {
+            if (str_contains($hrefTitle, ' ')) {
+                $explodeItems = explode(' ', $hrefTitle);
+                foreach ($explodeItems as $explodeItem) {
+                    $hrefTitles[] = $explodeItem;
+                }
+                unset($hrefTitles[$hrefTitleKey]);
             }
         }
 
         return $hrefTitles;
     }
 
+    public function getAllQueryLinks(string $html)
+    {
+        $data = [];
+
+        $html = $this->prepareHtml($html);
+        $dom = new Dom;
+        $dom->loadStr($html);
+        $links = $dom->find('a');
+
+        foreach ($links as $link) {
+            $href = $link->getAttribute('href');
+            if (str_contains($href, 'query')) {
+                $data[] = $href;
+                if (count($data) > 5) {
+                    return $data;
+                }
+            }
+        }
+
+        return $data;
+    }
 
     public function getAllLinks(string $html, string $domain)
     {
-        $filteredLinks = [];
 
         $html = $this->prepareHtml($html);
 
@@ -170,6 +247,8 @@ class DOMService
         $invalid[] = 'https://' . $domain . '/';
         $invalid[] = 'http://' . $domain;
         $invalid[] = 'http://' . $domain . '/';
+
+       // dd($links);
 
         $needLinks = [];
 
@@ -199,14 +278,29 @@ class DOMService
                     }
                 }
 
-                if (count($link->find('img')) > 0 && str_contains($href, $domain) && strlen($title) > 3) {
+                if (count($link->find('img')) > 0 && str_contains($href, $domain)) {
+                    if (is_null($title)) {
+                        $pTitle = $link->find('p')->toArray()[0] ?? null;
+                        if (!is_null($pTitle) and strlen($pTitle->text) > 2) {
+                            $title = $pTitle->text;
+                        }
+                        $spanTitle = $link->find('span')->toArray()[0] ?? null;
+                        if (!is_null($spanTitle) and strlen($spanTitle->text) > 2) {
+                            $title = $spanTitle->text;
+                        }
+                    }
                     $needLinks[$link->id()] = [
                         'href' => $href,
+                        'path_url' => substr($href, strpos($href, $domain) + strlen($domain)),
                         'title' => $title
                     ];
+                    if (count($needLinks) >= 15) {
+                        return $needLinks;
+                    }
                 }
             }
         }
+
 
         return $needLinks;
     }

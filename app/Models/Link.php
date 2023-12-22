@@ -15,6 +15,7 @@ class Link extends Model
 
     protected $fillable =[
         'link_url',
+        'path_url',
         'parent_id',
         'status',
         'level',

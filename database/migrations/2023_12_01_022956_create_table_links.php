@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->bigInteger('parent_id');
             $table->string('link_url')->unique();
+            $table->string('path_url')->unique();
             $table->integer('level')->nullable()->default(null);
             $table->integer('status')->default(0);
             $table->json('mask_ids')->nullable()->default(null);
