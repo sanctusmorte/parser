@@ -235,20 +235,21 @@ class DOMService
 
     public function getAllLinks(string $html, string $domain)
     {
-
         $html = $this->prepareHtml($html);
 
         $dom = new Dom;
         $dom->loadStr($html);
         $links = $dom->find('a');
 
+        if (count($links) > 300) {
+            $links = array_slice($links->toArray(), 0, 300);
+        }
+
         $invalid = [];
         $invalid[] = 'https://' . $domain;
         $invalid[] = 'https://' . $domain . '/';
         $invalid[] = 'http://' . $domain;
         $invalid[] = 'http://' . $domain . '/';
-
-       // dd($links);
 
         $needLinks = [];
 
@@ -278,7 +279,7 @@ class DOMService
                     }
                 }
 
-                if (count($link->find('img')) > 0 && str_contains($href, $domain)) {
+                if (count($link->find('img')) > 0 && $this->isHrefContainsDomain($href, $domain)) {
                     if (is_null($title)) {
                         $pTitle = $link->find('p')->toArray()[0] ?? null;
                         if (!is_null($pTitle) and strlen($pTitle->text) > 2) {
@@ -289,19 +290,39 @@ class DOMService
                             $title = $spanTitle->text;
                         }
                     }
+                    $pathUrl = substr($href, strpos($href, $domain) + strlen($domain));
+                    if ($pathUrl === '/' or $pathUrl === '') {
+                        continue;
+                    }
                     $needLinks[$link->id()] = [
                         'href' => $href,
-                        'path_url' => substr($href, strpos($href, $domain) + strlen($domain)),
+                        'path_url' => $pathUrl,
                         'title' => $title
                     ];
-                    if (count($needLinks) >= 15) {
+                    if (count($needLinks) >= 20) {
                         return $needLinks;
                     }
                 }
             }
         }
 
-
         return $needLinks;
+    }
+
+    private function isHrefContainsDomain(string $href, string $domain): bool
+    {
+        if (str_contains($href, $domain)) {
+            return true;
+        }
+
+        $items = explode('.', $domain);
+
+        foreach ($items as $item) {
+            if (str_contains($href, $item)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

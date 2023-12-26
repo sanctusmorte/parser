@@ -6,6 +6,7 @@ use App\Models\Link;
 use App\Models\LinkData;
 use App\Models\Site;
 use App\Models\Tag;
+use App\Services\HelperService;
 use App\Services\Links\LinksService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
@@ -107,18 +108,43 @@ class ThumbsService
         return $dataTitles;
     }
 
-    public function isSiteAdult(LinkData $linkData): bool
+    public function isSiteAdult(LinkData $linkData, array $links): bool
     {
         $needTitles = $this->prepareDataTitles($linkData);
 
         $foundTagsCount = $this->getTagsCountByHrefTitles($needTitles);
         $foundPornStarsCount = $this->getPornStarsCountByHrefTitles($needTitles);
 
+        if ($foundTagsCount < 3 and $foundPornStarsCount < 3) {
+            $needTitles = $this->getNeedTitlesByLinks($links);
+            $foundTagsCount = $this->getTagsCountByHrefTitles($needTitles);
+            $foundPornStarsCount = $this->getPornStarsCountByHrefTitles($needTitles);
+        }
+
         if ($foundTagsCount/count($needTitles) >= 0.4 or $foundPornStarsCount/count($needTitles) >= 0.4) {
             return true;
         }
 
         return false;
+    }
+
+    private function getNeedTitlesByLinks(array $links)
+    {
+        $data = [];
+
+        foreach ($links as $link) {
+            $title = strtolower(trim($link['title']));
+            $paths = HelperService::divideTextBySeparators($link['path_url']);
+            $paths[] = $title;
+
+            foreach ($paths as $path) {
+                if (!isset($data[$path])) {
+                    $data[$path] = $path;
+                }
+            }
+        }
+
+        return $data;
     }
 
     private function getTagsCountByHrefTitles(array $hrefTitles): int

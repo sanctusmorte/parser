@@ -21,6 +21,7 @@ return new class extends Migration
             $table->tinyInteger('is_thubms_type_parsed')->default(0);
             $table->tinyInteger('is_text_template_parsed')->default(0);
             $table->bigInteger('text_template_id')->nullable()->default(null);
+            $table->integer('site_type')->nullable()->default(0);
             $table->bigInteger('link_data_id')->nullable()->default(null);
             $table->timestamps();
         });

@@ -14,6 +14,7 @@ use App\Services\GuzzleService;
 use App\Services\Links\LinksService;
 use App\Services\Parse\Exceptions\ParseSiteBadResponseException;
 use App\Services\Proxy\ProxyService;
+use App\Services\Sites\Enum\SiteTypeEnum;
 use App\Services\Sites\SitesService;
 use App\Services\Thumbs\ThumbsService;
 use Exception;
@@ -37,6 +38,7 @@ class ParseSiteService
 
     const SITE = 'SITE';
     const LINK = 'LINK';
+    const MIN_LINKS = 15;
 
     private GuzzleService $guzzleService;
     private DOMService $DOMService;
@@ -249,36 +251,77 @@ class ParseSiteService
             throw new Exception();
         }
 
-        $linkData = LinkData::where('parent_site_id',7)->firstOrCreate();
+        $linkData = LinkData::where('parent_site_id',$site->id)->firstOrCreate();
 
         $linkData = $this->setLinkData($linkData, $html, 'site', $site->id, $isRedirect, $site->link_url, null, $thumbsTypes);
 
         $site->status = $this->detectSiteStatusByLinksAndMatchedData($links, $linkData);
+        $site->site_type = $this->detectSiteTypeByLinks($links, $site);
         $site->link_data_id = $linkData->id;
         $site->save();
 
         $linkData->save();
 
-        Link::upsert($this->getLinksInsertData($links, $site->id), ['link_url'], ['link_url', 'parent_id', 'path_url']);
+        if (count($links) >= 15 && $site->status === 1) {
+            Link::upsert($this->getLinksInsertData($links, $site->id), ['link_url', 'parent_id', 'path_url'], ['link_url', 'parent_id', 'path_url']);
+        }
 
         $linkData->refresh();
 
-        $this->sitesService->parseAndSaveTextTemplateForSiteById($site->id);
+        if ($site->status === 1) {
+            $this->sitesService->parseAndSaveTextTemplateForSiteById($site->id);
+        }
+    }
+
+    private function detectSiteTypeByLinks($links, Site $site): int
+    {
+        if ($site->status !== 1) {
+            return SiteTypeEnum::NONE;
+        }
+
+        $count = 0;
+
+        if (count($links) < 15) {
+            return SiteTypeEnum::NONE;
+        }
+
+        $matches = ['video', 'videos', 'play', 'watch', 'film', 'films'];
+        foreach ($links as $link) {
+            $url = strtolower($link['path_url']);
+            if (strlen($url) < 5) {
+                continue;
+            }
+            $items = explode('/', $url);
+            foreach ($items as $item) {
+                if (strlen($item) < 3) {
+                    continue;
+                }
+                if (in_array($item, $matches)) {
+                    $count++;
+                }
+            }
+        }
+
+        if ($count/count($links) > 0.5) {
+            return SiteTypeEnum::VIDEOS;
+        }
+
+        return SiteTypeEnum::TAGS;
     }
 
     private function detectSiteStatusByLinksAndMatchedData(array $links, LinkData $linkData)
     {
-        if ($links < 8) {
+        if (count($links) < self::MIN_LINKS) {
             return 2;
         }
 
-        $isSiteAdult = $this->thumbsService->isSiteAdult($linkData);
+        $isSiteAdult = $this->thumbsService->isSiteAdult($linkData, $links);
 
-        if (!$isSiteAdult) {
-            return 2;
+        if ($isSiteAdult) {
+            return 1;
         }
 
-        return 1;
+        return 2;
     }
 
     private function getLinksInsertData(array $links, int $parentId): array
@@ -286,9 +329,6 @@ class ParseSiteService
         $linksInsertData = [];
 
         foreach ($links as $link) {
-            if (count($linksInsertData) >= 10) {
-                break;
-            }
             $linksInsertData[] = [
                 'parent_id' => $parentId,
                 'link_url' => $link['href'],
@@ -296,6 +336,9 @@ class ParseSiteService
                 'level' => 1,
                 'status' => 0,
             ];
+            if (count($linksInsertData) >= 5) {
+                return $linksInsertData;
+            }
         }
 
         return $linksInsertData;

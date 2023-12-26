@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\VoyagerSitesErrorController;
 use App\Http\Controllers\Admin\VoyagerSitesFilteredController;
+use App\Http\Controllers\Admin\VoyagerSitesUnmatchedController;
 use App\Http\Controllers\Admin\VoyagerSiteTextTemplatesController;
 use App\Http\Controllers\GuzzleController;
 use App\Http\Controllers\ImportController;
@@ -44,6 +46,8 @@ Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();
 
     Route::get('/sites-filtered', [VoyagerSitesFilteredController::class, 'index'])->name('voyager.sites-filtered.index');
+    Route::get('/sites-unmatched', [VoyagerSitesUnmatchedController::class, 'index'])->name('voyager.sites-unmatched.index');
+    Route::get('/sites-error', [VoyagerSitesErrorController::class, 'index'])->name('voyager.sites-error.index');
     Route::get('/site-text-templates', [VoyagerSiteTextTemplatesController::class, 'index'])->name('voyager.site-text-templates.index');
     Route::get('/sites/{id}/masks', [VoyagerSitesFilteredController::class, 'show'])->name('voyager.sites-filtered.show');
 
