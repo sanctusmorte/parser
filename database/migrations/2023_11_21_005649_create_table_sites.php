@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('link_url')->unique();
             $table->integer('status')->default(0);
             $table->tinyInteger('is_thubms_type_parsed')->default(0);
+            $table->tinyInteger('is_text_template_parsed')->default(0);
+            $table->bigInteger('text_template_id')->nullable()->default(null);
             $table->bigInteger('link_data_id')->nullable()->default(null);
             $table->timestamps();
         });

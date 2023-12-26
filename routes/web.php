@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\VoyagerSitesFilteredController;
+use App\Http\Controllers\Admin\VoyagerSiteTextTemplatesController;
 use App\Http\Controllers\GuzzleController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\MaskController;
@@ -36,11 +37,14 @@ Route::get('/parse/links/{id}/debug', [ParseSiteController::class, 'parseLinkDeb
 Route::get('/parse/masks/{id}', [MaskController::class, 'index']);
 Route::get('/parse/thumbs/site/{id}', [ParseSiteController::class, 'parseThumbTypeForSite']);
 
+Route::get('/parse/text-template/site/{id}', [ParseSiteController::class, 'parseTextTemplateForSite']);
+
 
 Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();
 
     Route::get('/sites-filtered', [VoyagerSitesFilteredController::class, 'index'])->name('voyager.sites-filtered.index');
+    Route::get('/site-text-templates', [VoyagerSiteTextTemplatesController::class, 'index'])->name('voyager.site-text-templates.index');
     Route::get('/sites/{id}/masks', [VoyagerSitesFilteredController::class, 'show'])->name('voyager.sites-filtered.show');
 
 });

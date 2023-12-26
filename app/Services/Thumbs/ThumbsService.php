@@ -22,10 +22,11 @@ class ThumbsService
         $this->linksService = $linksService;
     }
 
+
     /**
-     * @throws Exception
+     * @throws \Exception
      */
-    public function parseThumbsTypeForSite(int $siteId)
+    public function parseThumbsTypeForSite(int $siteId): void
     {
         $site = Site::find($siteId);
         $siteData = LinkData::where('parent_site_id', $siteId)->first();
@@ -34,27 +35,9 @@ class ThumbsService
             throw new ModelNotFoundException();
         }
 
-        if (is_null($siteData->href_titles) and is_null($siteData->img_alts)) {
-            throw new \Exception('Href titles and img alts are null both, cant parse thumbs type, site id - ' . $siteId);
-        }
+        $types = [];
 
-        $types = json_decode($siteData->content_thumb, 1) ?? [];
-
-        $hrefTitles = json_decode($siteData->href_titles, 1);
-        $imgAlts = json_decode($siteData->img_alts, 1);
-
-
-        dd($hrefTitles, $imgAlts);
-
-        $needTitles = $hrefTitles;
-
-        if (count($hrefTitles) < 10 and count($imgAlts) < 10) {
-            throw new \Exception('Count of href titles and count of img alt < 10, cant parse thumbs type, site id - ' . $siteId);
-        }
-
-        if (count($hrefTitles) < 10) {
-            $needTitles = $imgAlts;
-        }
+        $needTitles = $this->prepareDataTitles($siteData);
 
         $foundTagsCount = $this->getTagsCountByHrefTitles($needTitles);
         $foundPornStarsCount = $this->getPornStarsCountByHrefTitles($needTitles);
@@ -73,9 +56,69 @@ class ThumbsService
         $siteData->save();
     }
 
-    private function getType()
+    private function prepareDataTitles(LinkData $linkData): array
     {
+        $dataTitles = $this->getDataTitles($linkData);
+        $needTitles = [];
 
+        foreach ($dataTitles as $dataTitle) {
+            foreach ([',', '+', 'and', ' '] as $separator) {
+                if (str_contains($dataTitle, $separator)) {
+                    $explodeItems = explode($separator, $dataTitle);
+                    foreach ($explodeItems as $explodeItem) {
+                        if (strlen($explodeItem) >= 2) {
+                            $explodeItem = str_replace(':', '', $explodeItem);
+                            $explodeItem = str_replace('+', '', $explodeItem);
+                            $explodeItem = trim($explodeItem);
+                            if (!isset($needTitles[$explodeItem])) {
+                                $needTitles[$explodeItem] = $explodeItem;
+                            }
+                        }
+                    }
+                }
+            }
+            if (!isset($needTitles[$dataTitle])) {
+                $needTitles[$dataTitle] = $dataTitle;
+            }
+        }
+
+        return $needTitles;
+    }
+
+    private function getDataTitles(LinkData $linkData)
+    {
+        if (is_null($linkData->href_titles) and is_null($linkData->img_alts)) {
+            throw new \Exception('Href titles and img alts are null both');
+        }
+
+        $hrefTitles = json_decode($linkData->href_titles, 1);
+        $imgAlts = json_decode($linkData->img_alts, 1);
+
+        $dataTitles = $hrefTitles;
+
+        if (count($hrefTitles) < 10 and count($imgAlts) < 10) {
+            throw new \Exception('Count of href titles and count of img alt < 10');
+        }
+
+        if (count($hrefTitles) < 10) {
+            $dataTitles = $imgAlts;
+        }
+
+        return $dataTitles;
+    }
+
+    public function isSiteAdult(LinkData $linkData): bool
+    {
+        $needTitles = $this->prepareDataTitles($linkData);
+
+        $foundTagsCount = $this->getTagsCountByHrefTitles($needTitles);
+        $foundPornStarsCount = $this->getPornStarsCountByHrefTitles($needTitles);
+
+        if ($foundTagsCount/count($needTitles) >= 0.4 or $foundPornStarsCount/count($needTitles) >= 0.4) {
+            return true;
+        }
+
+        return false;
     }
 
     private function getTagsCountByHrefTitles(array $hrefTitles): int

@@ -15,6 +15,7 @@ use App\Services\Links\LinksService;
 use App\Services\Parse\Exceptions\ParseSiteBadResponseException;
 use App\Services\Proxy\ProxyService;
 use App\Services\Sites\SitesService;
+use App\Services\Thumbs\ThumbsService;
 use Exception;
 use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Exception\ConnectException;
@@ -42,14 +43,16 @@ class ParseSiteService
     private LinksService $linksService;
     private ProxyService $proxyService;
     private SitesService $sitesService;
+    private ThumbsService $thumbsService;
 
-    public function __construct(GuzzleService $guzzleService, DOMService $DOMService, LinksService $linksService, ProxyService $proxyService, SitesService $sitesService)
+    public function __construct(GuzzleService $guzzleService, DOMService $DOMService, LinksService $linksService, ProxyService $proxyService, SitesService $sitesService, ThumbsService $thumbsService)
     {
         $this->guzzleService = $guzzleService;
         $this->DOMService = $DOMService;
         $this->linksService = $linksService;
         $this->proxyService = $proxyService;
         $this->sitesService = $sitesService;
+        $this->thumbsService = $thumbsService;
     }
 
     /**
@@ -136,6 +139,7 @@ class ParseSiteService
         $response->close();
 
         $this->setDataToSite($html, $existSite, $isRedirect);
+
 
         HandleSiteMasksJob::dispatch($siteId);
 
@@ -247,16 +251,34 @@ class ParseSiteService
 
         $linkData = LinkData::where('parent_site_id',7)->firstOrCreate();
 
-
         $linkData = $this->setLinkData($linkData, $html, 'site', $site->id, $isRedirect, $site->link_url, null, $thumbsTypes);
 
-        $site->status = count($links) >= 8 ? 1 : 2;
+        $site->status = $this->detectSiteStatusByLinksAndMatchedData($links, $linkData);
         $site->link_data_id = $linkData->id;
         $site->save();
 
         $linkData->save();
 
         Link::upsert($this->getLinksInsertData($links, $site->id), ['link_url'], ['link_url', 'parent_id', 'path_url']);
+
+        $linkData->refresh();
+
+        $this->sitesService->parseAndSaveTextTemplateForSiteById($site->id);
+    }
+
+    private function detectSiteStatusByLinksAndMatchedData(array $links, LinkData $linkData)
+    {
+        if ($links < 8) {
+            return 2;
+        }
+
+        $isSiteAdult = $this->thumbsService->isSiteAdult($linkData);
+
+        if (!$isSiteAdult) {
+            return 2;
+        }
+
+        return 1;
     }
 
     private function getLinksInsertData(array $links, int $parentId): array

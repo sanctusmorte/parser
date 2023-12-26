@@ -16,6 +16,16 @@ class Site extends Model
         return $this->hasMany(Link::class, 'parent_id');
     }
 
+    public function textTemplate()
+    {
+        return $this->hasOne(SiteTextTemplate::class, 'id', 'text_template_id');
+    }
+
+    public function siteData()
+    {
+        return $this->hasOne(LinkData::class, 'parent_site_id', 'id')->first();
+    }
+
     public function ungropedLinks()
     {
         return $this->hasMany(Link::class, 'parent_id')->whereNull('links.mask_ids');

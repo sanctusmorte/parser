@@ -7,6 +7,7 @@ use App\Jobs\ParseLinksJob;
 use App\Models\Site;
 use App\Services\Links\LinksService;
 use App\Services\Parse\ParseSiteService;
+use App\Services\Sites\SitesService;
 use App\Services\Thumbs\ThumbsService;
 use Exception;
 
@@ -34,6 +35,11 @@ class ParseSiteController extends Controller
     public function parseThumbTypeForSite(int $siteId, ThumbsService $service)
     {
         $service->parseThumbsTypeForSite($siteId);
+    }
+
+    public function parseTextTemplateForSite(int $siteId, SitesService $service)
+    {
+        $service->parseAndSaveTextTemplateForSiteById($siteId);
     }
 
 }

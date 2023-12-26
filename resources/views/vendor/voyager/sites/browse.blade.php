@@ -102,6 +102,7 @@
                                         </th>
                                     @endforeach
                                     <th>Ссылки</th>
+                                    <th>Текстовый шаблон</th>
                                     <th class="actions text-right dt-not-orderable">{{ __('voyager::generic.actions') }}</th>
                                 </tr>
                                 </thead>
@@ -258,6 +259,11 @@
                                                 <a target="_blank" href="{{route('voyager.links.index')}}?key=parent_id&filter=equals&s={{$data->links()->get()[0]->parent_id}}">{{ $data->links()->count() }}</a>
                                             @endif
                                         </td>
+                                            <td>
+                                                @if(!empty($data->text_template_id))
+                                                    <a target="_blank" href="{{route('voyager.site-text-templates.index')}}?key=id&filter=equals&s={{$data->text_template_id}}">{{ $data->textTemplate()->get()[0]->template }}</a>
+                                                @endif
+                                            </td>
                                         <td class="no-sort no-click bread-actions">
                                             @foreach($actions as $action)
                                                 @if (!method_exists($action, 'massAction'))
