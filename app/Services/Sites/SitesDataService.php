@@ -9,7 +9,7 @@ class SitesDataService
 {
     public function getLinksToParse(): array
     {
-        return Site::where(['status' => 0])->where('id', '<=', 400)->limit(15)->pluck('id')->toArray();
+        return Site::where(['status' => 0])->where('id', '<=', 400)->limit(6)->pluck('id')->toArray();
     }
 
     public function getSitesWithoutThumbsType(): array
