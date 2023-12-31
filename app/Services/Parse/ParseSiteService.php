@@ -219,7 +219,6 @@ class ParseSiteService
         try {
             $linkData = $this->setLinkData($linkData, $html, 'link', $link->id, $isRedirect, $domain, $level, thumbsTypes: $thumbsTypes);
             $linkData->save();
-            Log::info('Сейванули link data - чекаем чо получилось', [$linkData]);
         } catch (Exception $e) {
             Log::error('wtf не могу данные сохранить', [$e]);
         }
