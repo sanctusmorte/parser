@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Mockery\Exception;
 use PHPHtmlParser\Dom;
 
 class DOMService
@@ -147,6 +148,17 @@ class DOMService
         if (count($result) > 0) {
             foreach ($result as $htmlNode) {
                 $title = $htmlNode->getTag()->getAttribute('title')['value'] ?? null;
+
+                if (is_null($title)) {
+                    $parent = $htmlNode->getParent();
+                    foreach ($parent->find('p')->toArray() as $parentP) {
+                        if (strlen($parentP->text) >= 5) {
+                            $title = $parentP->text;
+                            break;
+                        };
+                    }
+                }
+
                 $href = $htmlNode->getTag()->getAttribute('href')['value'] ?? null;
 
                 if (is_null($title) or is_null($href)) {
@@ -170,19 +182,19 @@ class DOMService
 
                 $needTitles = [];
 
-                foreach ([',', '+', 'and', ' '] as $separator) {
-                    if (str_contains($title, $separator)) {
-                        $explodeItems = explode($separator, $title);
-                        foreach ($explodeItems as $explodeItem) {
-                            if (strlen($explodeItem) >= 2) {
-                                $explodeItem = str_replace(':', '', $explodeItem);
-                                $explodeItem = str_replace('+', '', $explodeItem);
-                                $explodeItem = trim($explodeItem);
-                                $needTitles[] = $explodeItem;
-                            }
-                        }
-                    }
-                }
+//                foreach ([',', '+', 'and', ' '] as $separator) {
+//                    if (str_contains($title, $separator)) {
+//                        $explodeItems = explode($separator, $title);
+//                        foreach ($explodeItems as $explodeItem) {
+//                            if (strlen($explodeItem) >= 2) {
+//                                $explodeItem = str_replace(':', '', $explodeItem);
+//                                $explodeItem = str_replace('+', '', $explodeItem);
+//                                $explodeItem = trim($explodeItem);
+//                                $needTitles[] = $explodeItem;
+//                            }
+//                        }
+//                    }
+//                }
 
                 $needTitles[] = $title;
 
@@ -198,15 +210,15 @@ class DOMService
             }
         }
 
-        foreach ($hrefTitles as $hrefTitleKey => $hrefTitle) {
-            if (str_contains($hrefTitle, ' ')) {
-                $explodeItems = explode(' ', $hrefTitle);
-                foreach ($explodeItems as $explodeItem) {
-                    $hrefTitles[] = $explodeItem;
-                }
-                unset($hrefTitles[$hrefTitleKey]);
-            }
-        }
+//        foreach ($hrefTitles as $hrefTitleKey => $hrefTitle) {
+//            if (str_contains($hrefTitle, ' ')) {
+//                $explodeItems = explode(' ', $hrefTitle);
+//                foreach ($explodeItems as $explodeItem) {
+//                    $hrefTitles[] = $explodeItem;
+//                }
+//                unset($hrefTitles[$hrefTitleKey]);
+//            }
+//        }
 
         return $hrefTitles;
     }
@@ -233,6 +245,43 @@ class DOMService
         return $data;
     }
 
+    private function getUniqueLinks(array $links)
+    {
+        $data = [];
+        $needLinks = [];
+
+        foreach ($links as $link) {
+            $items = explode('/', $link['path_url']);
+            if (!isset($items[1])) {
+                continue;
+            }
+            $group = $items[1];
+            if ($group == '') {
+                continue;
+            }
+
+            if (!isset($needLinks[$group])) {
+                $needLinks[$group][] = $link;
+            } else {
+                if (count($needLinks[$group]) < 15) {
+                    $needLinks[$group][] = $link;
+                }
+            }
+        }
+
+        foreach ($needLinks as $needLink) {
+            foreach ($needLink as $item) {
+                $data[] = $item;
+            }
+        }
+
+        if (count($data) > 15) {
+            $data = array_slice($data, 0, 15);
+        }
+
+        return $data;
+    }
+
     public function getAllLinks(string $html, string $domain)
     {
         $html = $this->prepareHtml($html);
@@ -241,8 +290,8 @@ class DOMService
         $dom->loadStr($html);
         $links = $dom->find('a');
 
-        if (count($links) > 300) {
-            $links = array_slice($links->toArray(), 0, 300);
+        if (count($links) > 500) {
+            $links = array_slice($links->toArray(), 0, 500);
         }
 
         $invalid = [];
@@ -281,13 +330,17 @@ class DOMService
 
                 if (count($link->find('img')) > 0 && $this->isHrefContainsDomain($href, $domain)) {
                     if (is_null($title)) {
-                        $pTitle = $link->find('p')->toArray()[0] ?? null;
-                        if (!is_null($pTitle) and strlen($pTitle->text) > 2) {
-                            $title = $pTitle->text;
-                        }
-                        $spanTitle = $link->find('span')->toArray()[0] ?? null;
-                        if (!is_null($spanTitle) and strlen($spanTitle->text) > 2) {
-                            $title = $spanTitle->text;
+                        $title = $link->getAttribute('title');
+                    }
+                    if (is_null($title)) {
+                        $title = $this->findTextInHtmlNode($link);
+                    }
+                    if (is_null($title)) {
+                        $siblingsLinks = $link->getParent()->find('a')->toArray();
+                        foreach ($siblingsLinks as $siblingsLink) {
+                            if ($siblingsLink->id() !== $link->id()) {
+                                $title = $this->findTextInHtmlNode($siblingsLink);
+                            }
                         }
                     }
                     $pathUrl = substr($href, strpos($href, $domain) + strlen($domain));
@@ -299,14 +352,35 @@ class DOMService
                         'path_url' => $pathUrl,
                         'title' => $title
                     ];
-                    if (count($needLinks) >= 20) {
-                        return $needLinks;
-                    }
                 }
             }
         }
 
-        return $needLinks;
+        return $this->getUniqueLinks($needLinks);
+    }
+
+    private function findTextInHtmlNode(Dom\HtmlNode $node)
+    {
+        $text = null;
+
+        $pTitle = $node->find('p')->toArray()[0] ?? null;
+        if (!is_null($pTitle) and strlen($pTitle->text) > 2) {
+            $text = $pTitle->text;
+        }
+        $spanTitle = $node->find('span')->toArray()[0] ?? null;
+        if (!is_null($spanTitle) and strlen($spanTitle->text) > 2) {
+            $text = $spanTitle->text;
+        }
+        $strongTitle = $node->find('strong')->toArray()[0] ?? null;
+        if (!is_null($strongTitle) and strlen($strongTitle->text) > 2) {
+            $text = $strongTitle->text;
+        }
+        $bTitle = $node->find('b')->toArray()[0] ?? null;
+        if (!is_null($bTitle) and strlen($bTitle->text) > 2) {
+            $text = $bTitle->text;
+        }
+
+        return $text;
     }
 
     private function isHrefContainsDomain(string $href, string $domain): bool

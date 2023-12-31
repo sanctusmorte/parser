@@ -38,17 +38,30 @@ class ThumbsService
 
         $types = [];
 
-        $needTitles = $this->prepareDataTitles($siteData);
+        $needTitles = [];
+        $dataTitles = $this->prepareDataTitles($siteData);
 
-        $foundTagsCount = $this->getTagsCountByHrefTitles($needTitles);
-        $foundPornStarsCount = $this->getPornStarsCountByHrefTitles($needTitles);
-
-        if ($foundTagsCount / count($needTitles) > 0.5) {
-            $types[] = 'Tags List Page';
+        foreach ($dataTitles as $dataTitle) {
+            if (str_word_count($dataTitle) <= 3) {
+                $needTitles[] = $dataTitle;
+            }
         }
 
-        if ($foundPornStarsCount >= 10) {
-            $types[] = 'Pornstars Page';
+        if ($needTitles < 10) {
+            $types[] = 'Not Enough';
+        }
+
+        if (count($needTitles) > 0) {
+            $foundTagsCount = $this->getTagsCountByHrefTitles($needTitles);
+            $foundPornStarsCount = $this->getPornStarsCountByHrefTitles($needTitles);
+
+            if ($foundTagsCount / count($needTitles) > 0.8) {
+                $types[] = 'Tags List Page';
+            }
+
+            if ($foundPornStarsCount >= 10) {
+                $types[] = 'Pornstars Page';
+            }
         }
 
         $siteData->content_thumb = json_encode($types);
@@ -60,26 +73,15 @@ class ThumbsService
     private function prepareDataTitles(LinkData $linkData): array
     {
         $dataTitles = $this->getDataTitles($linkData);
+
         $needTitles = [];
 
         foreach ($dataTitles as $dataTitle) {
-            foreach ([',', '+', 'and', ' '] as $separator) {
-                if (str_contains($dataTitle, $separator)) {
-                    $explodeItems = explode($separator, $dataTitle);
-                    foreach ($explodeItems as $explodeItem) {
-                        if (strlen($explodeItem) >= 2) {
-                            $explodeItem = str_replace(':', '', $explodeItem);
-                            $explodeItem = str_replace('+', '', $explodeItem);
-                            $explodeItem = trim($explodeItem);
-                            if (!isset($needTitles[$explodeItem])) {
-                                $needTitles[$explodeItem] = $explodeItem;
-                            }
-                        }
-                    }
+            $items = HelperService::divideTextBySeparators($dataTitle);
+            foreach ($items as $item) {
+                if (!isset($needTitles[$item])) {
+                    $needTitles[$item] = $item;
                 }
-            }
-            if (!isset($needTitles[$dataTitle])) {
-                $needTitles[$dataTitle] = $dataTitle;
             }
         }
 
@@ -92,25 +94,46 @@ class ThumbsService
             throw new \Exception('Href titles and img alts are null both');
         }
 
+        $dataTitles = [];
         $hrefTitles = json_decode($linkData->href_titles, 1);
         $imgAlts = json_decode($linkData->img_alts, 1);
 
-        $dataTitles = $hrefTitles;
-
-        if (count($hrefTitles) < 10 and count($imgAlts) < 10) {
-            throw new \Exception('Count of href titles and count of img alt < 10');
+        foreach ($hrefTitles as $hrefTitle) {
+            if (!isset($dataTitles[$hrefTitle])) {
+                $dataTitles[$hrefTitle] = $hrefTitle;
+            }
         }
 
-        if (count($hrefTitles) < 10) {
-            $dataTitles = $imgAlts;
+        foreach ($imgAlts as $imgAlt) {
+            if (!isset($dataTitles[$imgAlt])) {
+                $dataTitles[$imgAlt] = $imgAlt;
+            }
         }
 
         return $dataTitles;
     }
 
+    /**
+     * @throws \Exception
+     */
     public function isSiteAdult(LinkData $linkData, array $links): bool
     {
-        $needTitles = $this->prepareDataTitles($linkData);
+        $needTitles = [];
+        $dataTitles = $this->getDataTitles($linkData);
+
+        foreach ($dataTitles as $dataTitle) {
+            $items = HelperService::divideTextBySeparators($dataTitle);
+            foreach ($items as $item) {
+                $itemName = strtolower($item);
+                if (strlen($itemName) < 3) {
+                    continue;
+                }
+                if (!isset($needTitles[$itemName])) {
+                    $needTitles[$itemName] = $itemName;
+                }
+            }
+        }
+        $needTitles = array_values($needTitles);
 
         $foundTagsCount = $this->getTagsCountByHrefTitles($needTitles);
         $foundPornStarsCount = $this->getPornStarsCountByHrefTitles($needTitles);
@@ -121,7 +144,7 @@ class ThumbsService
             $foundPornStarsCount = $this->getPornStarsCountByHrefTitles($needTitles);
         }
 
-        if ($foundTagsCount/count($needTitles) >= 0.4 or $foundPornStarsCount/count($needTitles) >= 0.4) {
+        if ($foundTagsCount/count($needTitles) >= 0.3 or $foundPornStarsCount/count($needTitles) >= 0.3) {
             return true;
         }
 
@@ -150,6 +173,7 @@ class ThumbsService
     private function getTagsCountByHrefTitles(array $hrefTitles): int
     {
         $tags = DB::table('tags');
+
         foreach ($hrefTitles as $hrefTitle) {
             $tags->orWhere('name', $hrefTitle);
         }

@@ -18,10 +18,10 @@ class Kernel extends ConsoleKernel
         $schedule->command(ParseSitesCommand::class)->everyMinute();
         $schedule->command(ParseThumbsTypeForSitesCommand::class)->everyMinute();
 
-//        $schedule->call(function () {
-//            Artisan::call('horizon:snapshot');
-//            Log::debug('horizon:snapshot');
-//        })->everyFiveMinutes();
+        $schedule->call(function () {
+            Artisan::call('horizon:snapshot');
+            Log::debug('horizon:snapshot');
+        })->everyFiveMinutes();
 
     }
 

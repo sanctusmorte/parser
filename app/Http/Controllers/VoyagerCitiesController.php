@@ -149,7 +149,6 @@ class VoyagerCitiesController extends VoyagerBaseController
         $actions = [];
         if (!empty($dataTypeContent->first())) {
             foreach (Voyager::actions() as $action) {
-                dd($action, $dataType, $dataTypeContent->first());
                 $action = new $action($dataType, $dataTypeContent->first());
 
                 if ($action->shouldActionDisplayOnDataType()) {
