@@ -379,6 +379,11 @@ class DOMService
         if (!is_null($bTitle) and strlen($bTitle->text) > 2) {
             $text = $bTitle->text;
         }
+        $h3Title = $node->find('h3')->toArray()[0] ?? null;
+        if (!is_null($h3Title) and strlen($h3Title->text) > 2) {
+            $text = $h3Title->text;
+        }
+
 
         return $text;
     }
