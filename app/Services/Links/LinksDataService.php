@@ -8,6 +8,6 @@ class LinksDataService
 {
     public function getLinksToParse(): array
     {
-        return Link::where(['status' => 0])->limit(30)->pluck('id')->toArray();
+        return Link::where(['status' => 0])->limit(5)->pluck('id')->toArray();
     }
 }

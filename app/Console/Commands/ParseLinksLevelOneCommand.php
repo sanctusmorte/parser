@@ -33,7 +33,7 @@ class ParseLinksLevelOneCommand extends Command
 
         foreach ($ids as $linkId) {
             ParseLinksJob::dispatch($linkId);
-            sleep(2);
+            sleep(12);
         }
 
         return Command::SUCCESS;
