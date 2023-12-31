@@ -16,7 +16,7 @@ class GuzzleService
     public function getRequest(string $url)
     {
         try {
-            return Http::send('get', $url, [
+            return Http::withOptions(['connect_timeout' => 15])->send('get', $url, [
                 'allow_redirects' => [
                     'track_redirects' => true
                 ]
