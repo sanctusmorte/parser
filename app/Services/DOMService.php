@@ -379,6 +379,14 @@ class DOMService
         if (!is_null($bTitle) and strlen($bTitle->text) > 2) {
             $text = $bTitle->text;
         }
+        $h1Title = $node->find('h1')->toArray()[0] ?? null;
+        if (!is_null($h1Title) and strlen($h1Title->text) > 2) {
+            $text = $h1Title->text;
+        }
+        $h2Title = $node->find('h2')->toArray()[0] ?? null;
+        if (!is_null($h2Title) and strlen($h2Title->text) > 2) {
+            $text = $h2Title->text;
+        }
         $h3Title = $node->find('h3')->toArray()[0] ?? null;
         if (!is_null($h3Title) and strlen($h3Title->text) > 2) {
             $text = $h3Title->text;
@@ -387,7 +395,7 @@ class DOMService
         if (is_null($text)) {
             $text = $node->text;
         }
-        
+
         return $text;
     }
 
