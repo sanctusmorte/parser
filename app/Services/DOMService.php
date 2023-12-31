@@ -263,7 +263,7 @@ class DOMService
             if (!isset($needLinks[$group])) {
                 $needLinks[$group][] = $link;
             } else {
-                if (count($needLinks[$group]) < 5) {
+                if (count($needLinks[$group]) < 10) {
                     $needLinks[$group][] = $link;
                 }
             }
@@ -275,8 +275,8 @@ class DOMService
             }
         }
 
-        if (count($data) > 15) {
-            $data = array_slice($data, 0, 15);
+        if (count($data) > 20) {
+            $data = array_slice($data, 0, 20);
         }
 
         return $data;

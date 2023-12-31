@@ -113,6 +113,65 @@ class ThumbsService
         return $dataTitles;
     }
 
+    private function getDataTitlesFromLinks(array $links)
+    {
+        $data = [];
+
+        foreach ($links as $link) {
+            $data[] =  $link['title'];
+        }
+
+        return $data;
+    }
+
+    private function removeBanWords($needTitles)
+    {
+        $data = [];
+        $banned = [];
+
+        foreach ($needTitles as $needTitle) {
+            foreach (['facebook', 'Twitter', 'Google+', 'Google', 'Favorites', 'Pinterest', 'Tube'] as $item) {
+                if (str_contains(strtolower($needTitle), strtolower($item))) {
+                    if (!isset($banned[$needTitle])) {
+                        $banned[$needTitle] = $needTitle;
+                    }
+                }
+            }
+        }
+
+        foreach ($needTitles as $needTitle) {
+            if (!in_array($needTitle, $banned)) {
+                $data[$needTitle] = $needTitle;
+            }
+        }
+
+        return array_values($data);
+    }
+
+    private function removeDomains($needTitles)
+    {
+        $data = [];
+        $banned = [];
+
+        foreach ($needTitles as $needTitle) {
+            foreach (['.com', '.co', '.su', '.cc', '.pro'] as $item) {
+                if (str_contains($needTitle, $item)) {
+                    if (!isset($banned[$needTitle])) {
+                        $banned[$needTitle] = $needTitle;
+                    }
+                }
+            }
+        }
+
+        foreach ($needTitles as $needTitle) {
+            if (!in_array($needTitle, $banned)) {
+                $data[$needTitle] = $needTitle;
+            }
+        }
+
+        return array_values($data);
+    }
+
     /**
      * @throws \Exception
      */
@@ -121,19 +180,33 @@ class ThumbsService
         $needTitles = [];
         $dataTitles = $this->getDataTitles($linkData);
 
+
+        if (empty($dataTitles) or count($dataTitles) < 20) {
+            //dd('1331');
+            $dataTitles = $this->getDataTitlesFromLinks($links);
+        }
+
         foreach ($dataTitles as $dataTitle) {
             $items = HelperService::divideTextBySeparators($dataTitle);
-            foreach ($items as $item) {
-                $itemName = strtolower($item);
-                if (strlen($itemName) < 3) {
-                    continue;
-                }
-                if (!isset($needTitles[$itemName])) {
-                    $needTitles[$itemName] = $itemName;
+            if (count($items) > 0) {
+                foreach ($items as $item) {
+                    $itemName = strtolower($item);
+                    if (strlen($itemName) < 2) {
+                        continue;
+                    }
+                    if (!isset($needTitles[$itemName])) {
+                        $needTitles[$itemName] = $itemName;
+                    }
                 }
             }
+            if (!isset($needTitles[$dataTitle])) {
+                $needTitles[$dataTitle] = $dataTitle;
+            }
         }
+
         $needTitles = array_values($needTitles);
+        $needTitles = $this->removeDomains($needTitles);
+        $needTitles = $this->removeBanWords($needTitles);
 
         if (count($needTitles) === 0) {
             return false;

@@ -310,7 +310,7 @@ class ParseSiteService
 
     private function detectSiteStatusByLinksAndMatchedData(array $links, LinkData $linkData)
     {
-        if (count($links) < self::MIN_LINKS) {
+        if (count($links) < 5) {
             return 2;
         }
 
