@@ -33,7 +33,7 @@ class ParseSitesCommand extends Command
 
         foreach ($ids as $siteId) {
             ParseSiteJob::dispatch($siteId);
-            sleep(1);
+            sleep(10);
         }
 
         return Command::SUCCESS;

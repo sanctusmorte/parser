@@ -33,7 +33,7 @@ class ParseThumbsTypeForSitesCommand extends Command
 
         foreach ($ids as $siteId) {
             ParseThumbsTypeForSiteJob::dispatch($siteId);
-            sleep(4);
+            sleep(20);
         }
 
         return Command::SUCCESS;
