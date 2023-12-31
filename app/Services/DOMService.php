@@ -384,7 +384,10 @@ class DOMService
             $text = $h3Title->text;
         }
 
-
+        if (is_null($text)) {
+            $text = $node->text;
+        }
+        
         return $text;
     }
 
