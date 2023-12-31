@@ -364,32 +364,36 @@ class DOMService
         $text = null;
 
         $pTitle = $node->find('p')->toArray()[0] ?? null;
-        if (!is_null($pTitle) and strlen($pTitle->text) > 2) {
+        if (!is_null($pTitle) and str_word_count($pTitle->text) > 2) {
             $text = $pTitle->text;
         }
         $spanTitle = $node->find('span')->toArray()[0] ?? null;
-        if (!is_null($spanTitle) and strlen($spanTitle->text) > 2) {
+        if (!is_null($spanTitle) and str_word_count($spanTitle->text) > 2) {
             $text = $spanTitle->text;
         }
         $strongTitle = $node->find('strong')->toArray()[0] ?? null;
-        if (!is_null($strongTitle) and strlen($strongTitle->text) > 2) {
+        if (!is_null($strongTitle) and str_word_count($strongTitle->text) > 2) {
             $text = $strongTitle->text;
         }
         $bTitle = $node->find('b')->toArray()[0] ?? null;
-        if (!is_null($bTitle) and strlen($bTitle->text) > 2) {
+        if (!is_null($bTitle) and str_word_count($bTitle->text) > 2) {
             $text = $bTitle->text;
         }
         $h1Title = $node->find('h1')->toArray()[0] ?? null;
-        if (!is_null($h1Title) and strlen($h1Title->text) > 2) {
+        if (!is_null($h1Title) and str_word_count($h1Title->text) > 2) {
             $text = $h1Title->text;
         }
         $h2Title = $node->find('h2')->toArray()[0] ?? null;
-        if (!is_null($h2Title) and strlen($h2Title->text) > 2) {
+        if (!is_null($h2Title) and str_word_count($h2Title->text) > 2) {
             $text = $h2Title->text;
         }
         $h3Title = $node->find('h3')->toArray()[0] ?? null;
-        if (!is_null($h3Title) and strlen($h3Title->text) > 2) {
+        if (!is_null($h3Title) and str_word_count($h3Title->text) > 2) {
             $text = $h3Title->text;
+        }
+        $divTitle = $node->find('div')->toArray()[0] ?? null;
+        if (!is_null($divTitle) and str_word_count($divTitle->text) > 2) {
+            $text = $divTitle->text;
         }
 
         if (is_null($text)) {
