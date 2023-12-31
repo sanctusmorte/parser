@@ -135,6 +135,10 @@ class ThumbsService
         }
         $needTitles = array_values($needTitles);
 
+        if (count($needTitles) === 0) {
+            return false;
+        }
+
         $foundTagsCount = $this->getTagsCountByHrefTitles($needTitles);
         $foundPornStarsCount = $this->getPornStarsCountByHrefTitles($needTitles);
 
