@@ -189,7 +189,7 @@ return [
             'maxTime' => 0,
             'maxJobs' => 10,
             'memory' => 512,
-            'tries' => 3,
+            'tries' => 0,
             'timeout' => 60,
             'nice' => 0,
         ],
@@ -202,6 +202,7 @@ return [
                 'maxProcesses' => 10,
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 3,
+                'timeout' => 30,
             ],
         ],
 
@@ -209,6 +210,7 @@ return [
             'supervisor-1' => [
                 'queue' => ['default'],
                 'maxProcesses' => 10,
+                'timeout' => 30,
             ],
         ],
     ],
