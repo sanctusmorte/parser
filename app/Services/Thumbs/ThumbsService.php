@@ -226,9 +226,7 @@ class ThumbsService
             $foundTagsCount = $this->getTagsCountByHrefTitles($needTitles);
             $foundPornStarsCount = $this->getPornStarsCountByHrefTitles($needTitles);
         }
-
-        dd($foundTagsCount, $needTitles, $foundPornStarsCount, $links, $dataTitles);
-
+        
         if ($foundTagsCount/count($needTitles) >= 0.3 or $foundPornStarsCount/count($needTitles) >= 0.3) {
             return true;
         }
