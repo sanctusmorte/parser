@@ -304,7 +304,15 @@ class ParseSiteService
             return SiteTypeEnum::VIDEOS;
         }
 
-        dd($links);
+        $needLinks = [];
+
+        foreach ($links as $link) {
+            if (str_word_count($link['title']) <= 4) {
+                $needLinks[] = $link;
+            }
+        }
+
+        dd($needLinks, $links);
 
         return SiteTypeEnum::TAGS;
     }
