@@ -252,6 +252,8 @@ class ThumbsService
             }
         }
 
+        $data = HelperService::divideTextInArray($data);
+
         return $data;
     }
 
