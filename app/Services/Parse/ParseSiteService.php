@@ -310,6 +310,9 @@ class ParseSiteService
         foreach ($links as $link) {
             if (str_word_count($link['title']) <= 4) {
                 $words = HelperService::divideTextBySeparators($link['title']);
+                if (is_null($words)) {
+                    dd($words, $link);
+                }
                 foreach ($words as $word) {
                     if (!isset($needTitles[$word])) {
                         $needTitles[$word] = $word;
