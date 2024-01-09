@@ -263,7 +263,7 @@ class ParseSiteService
         $linkData->save();
 
         if (count($links) >= 15 && $site->status === 1) {
-            Link::upsert($this->getLinksInsertData($links, $site->id), ['link_url'], ['link_url', 'parent_id', 'path_url']);
+            Link::upsert($this->getLinksInsertData($this->DOMService->getUniqueLinks($links), $site->id), ['link_url'], ['link_url', 'parent_id', 'path_url']);
         }
 
         $linkData->refresh();

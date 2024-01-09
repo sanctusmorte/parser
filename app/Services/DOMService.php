@@ -245,7 +245,7 @@ class DOMService
         return $data;
     }
 
-    private function getUniqueLinks(array $links)
+    public function getUniqueLinks(array $links)
     {
         $data = [];
         $needLinks = [];
