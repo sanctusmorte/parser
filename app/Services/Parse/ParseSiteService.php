@@ -307,24 +307,27 @@ class ParseSiteService
         }
 
         $needTitles = [];
+        $needWords = [];
 
         foreach ($links as $link) {
             if (str_word_count($link['title']) <= 4) {
                 $words = HelperService::divideTextBySeparators($link['title']);
                 foreach ($words as $word) {
-                    if (!isset($needTitles[$word])) {
-                        $needTitles[$word] = $word;
+                    if (!isset($needWords[$word])) {
+                        $needWords[$word] = $word;
                     }
                 }
+                $needTitles[] = $link['title'];
             }
         }
 
-        if (count($needTitles)/count($links) < 0.7) {
-            $foundTagsCount = $this->thumbsService->getTagsCountByHrefTitles($needTitles);
-            dd($foundTagsCount, $links, $needTitles);
-        }
+        if (count($needTitles)/count($links) > 0.7) {
+            $foundTagsCount = $this->thumbsService->getTagsCountByHrefTitles($needWords);
 
-        dd($needLinks, $links);
+            if ($foundTagsCount/count($needWords) > 0.5) {
+                return SiteTypeEnum::TAGS;
+            }
+        }
 
         return SiteTypeEnum::NONE;
     }
