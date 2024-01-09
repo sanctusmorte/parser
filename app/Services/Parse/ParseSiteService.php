@@ -310,7 +310,7 @@ class ParseSiteService
         $needWords = [];
 
         foreach ($links as $link) {
-            if (str_word_count($link['title']) <= 4) {
+            if (str_word_count($link['title']) <= 3) {
                 $words = HelperService::divideTextBySeparators($link['title']);
                 foreach ($words as $word) {
                     if (!isset($needWords[$word])) {
