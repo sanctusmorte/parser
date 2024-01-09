@@ -308,7 +308,7 @@ class ParseSiteService
 
         foreach ($links as $link) {
             if (str_word_count($link['title']) <= 4) {
-                $needLinks[] = $link;
+                $needLinks[] = $link['title'];
             }
         }
 
