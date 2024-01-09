@@ -313,11 +313,11 @@ class ParseSiteService
                 if (is_null($words)) {
                     dd($words, $link);
                 }
-                foreach ($words as $word) {
-                    if (!isset($needTitles[$word])) {
-                        $needTitles[$word] = $word;
-                    }
-                }
+//                foreach ($words as $word) {
+//                    if (!isset($needTitles[$word])) {
+//                        $needTitles[$word] = $word;
+//                    }
+//                }
             }
         }
 
