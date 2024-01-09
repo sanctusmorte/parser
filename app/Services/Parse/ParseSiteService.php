@@ -279,6 +279,8 @@ class ParseSiteService
             return SiteTypeEnum::NONE;
         }
 
+        $links = array_slice($links, 0, 30);
+
         $count = 0;
 
         if (count($links) < 15) {

@@ -184,10 +184,9 @@ class ThumbsService
         $needTitles = [];
         $dataTitles = $this->getDataTitles($linkData);
 
-        dd($links);
+        $links = array_slice($links, 0, 30);
 
         if (empty($dataTitles) or count($dataTitles) < 20) {
-            //dd('1331');
             $dataTitles = $this->getDataTitlesFromLinks($links);
         }
 
