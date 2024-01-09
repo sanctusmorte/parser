@@ -76,6 +76,7 @@ class ParseSiteService
                 $existSite->status = 3;
                 $existSite->save();
             }
+            dd($e);
             throw new Exception($e->getMessage(), $e->getCode(), $e);
         }
     }
