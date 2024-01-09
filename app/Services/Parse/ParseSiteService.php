@@ -245,7 +245,6 @@ class ParseSiteService
             if (count($queryLinks) > 3) {
                 $thumbsTypes[] = 'Search List Page';
             }
-
         } catch (Exception $e) {
             throw new Exception();
         }
@@ -304,6 +303,8 @@ class ParseSiteService
         if ($count/count($links) > 0.5) {
             return SiteTypeEnum::VIDEOS;
         }
+
+        dd($links);
 
         return SiteTypeEnum::TAGS;
     }
