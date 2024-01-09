@@ -324,6 +324,8 @@ class ParseSiteService
         if (count($needTitles)/count($links) > 0.7) {
             $foundTagsCount = $this->thumbsService->getTagsCountByHrefTitles($needWords);
 
+            dd($needTitles, $needWords, $links, $foundTagsCount);
+
             if ($foundTagsCount/count($needWords) > 0.5) {
                 return SiteTypeEnum::TAGS;
             }
