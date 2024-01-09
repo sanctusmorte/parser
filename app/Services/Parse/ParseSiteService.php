@@ -302,6 +302,8 @@ class ParseSiteService
             }
         }
 
+        dd($count, $links);
+
         if ($count/count($links) > 0.5) {
             return SiteTypeEnum::VIDEOS;
         }
