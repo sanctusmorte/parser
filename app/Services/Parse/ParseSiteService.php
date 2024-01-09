@@ -312,9 +312,14 @@ class ParseSiteService
             }
         }
 
+        if (count($needLinks)/count($links) < 0.7) {
+            $foundTagsCount = $this->thumbsService->getTagsCountByHrefTitles($links);
+            dd($foundTagsCount, $links, $needLinks);
+        }
+
         dd($needLinks, $links);
 
-        return SiteTypeEnum::TAGS;
+        return SiteTypeEnum::NONE;
     }
 
     private function detectSiteStatusByLinksAndMatchedData(array $links, LinkData $linkData)

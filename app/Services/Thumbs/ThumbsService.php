@@ -247,7 +247,7 @@ class ThumbsService
         return $data;
     }
 
-    private function getTagsCountByHrefTitles(array $hrefTitles): int
+    public function getTagsCountByHrefTitles(array $hrefTitles): int
     {
         $tags = DB::table('tags');
 
