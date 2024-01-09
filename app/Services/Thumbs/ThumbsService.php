@@ -98,18 +98,22 @@ class ThumbsService
         $hrefTitles = json_decode($linkData->href_titles, 1);
         $imgAlts = json_decode($linkData->img_alts, 1);
 
-        foreach ($hrefTitles as $hrefTitle) {
-            if (!isset($dataTitles[$hrefTitle])) {
-                $dataTitles[$hrefTitle] = $hrefTitle;
+        if (!empty($hrefTitles)) {
+            foreach ($hrefTitles as $hrefTitle) {
+                if (!isset($dataTitles[$hrefTitle])) {
+                    $dataTitles[$hrefTitle] = $hrefTitle;
+                }
             }
         }
 
-        foreach ($imgAlts as $imgAlt) {
-            if (!isset($dataTitles[$imgAlt])) {
-                $dataTitles[$imgAlt] = $imgAlt;
+        if (!empty($imgAlts)) {
+            foreach ($imgAlts as $imgAlt) {
+                if (!isset($dataTitles[$imgAlt])) {
+                    $dataTitles[$imgAlt] = $imgAlt;
+                }
             }
         }
-
+        
         return $dataTitles;
     }
 
