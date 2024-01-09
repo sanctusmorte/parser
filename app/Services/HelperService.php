@@ -27,4 +27,34 @@ class HelperService
 
         return array_values($data);
     }
+
+    static public function divideTextInArray(array $items)
+    {
+        $data = [];
+
+        foreach ($items as $item) {
+            $words = self::divideTextBySeparators($item);
+            if (count($words) > 0) {
+                foreach ($words as $word) {
+                    $itemName = strtolower($word);
+                    if (strlen($itemName) < 3) {
+                        continue;
+                    }
+                    $itemName = str_replace(' ', '', $itemName);
+                    if (!isset($data[$itemName])) {
+                        $data[$itemName] = $itemName;
+                    }
+                }
+            }
+            if (strlen($item) < 3) {
+                continue;
+            }
+            $item = str_replace(' ', '', $item);
+            if (!isset($data[$item])) {
+                $data[$item] = $item;
+            }
+        }
+
+        return $data;
+    }
 }

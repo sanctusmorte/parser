@@ -203,10 +203,12 @@ class ThumbsService
                     }
                 }
             }
-            if (!isset($needTitles[$dataTitle])) {
+            if (!isset($needTitles[$dataTitle]) && strlen($dataTitle) > 2) {
                 $needTitles[$dataTitle] = $dataTitle;
             }
         }
+
+        $needTitles = HelperService::divideTextInArray($needTitles);
 
         $needTitles = array_values($needTitles);
         $needTitles = $this->removeDomains($needTitles);
