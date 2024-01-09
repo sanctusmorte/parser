@@ -290,8 +290,8 @@ class DOMService
         $dom->loadStr($html);
         $links = $dom->find('a');
 
-        if (count($links) > 500) {
-            $links = array_slice($links->toArray(), 0, 500);
+        if (count($links) > 300) {
+            $links = array_slice($links->toArray(), 0, 300);
         }
 
         $invalid = [];
@@ -356,7 +356,7 @@ class DOMService
             }
         }
 
-        return $this->getUniqueLinks($needLinks);
+        return $needLinks;
     }
 
     private function findTextInHtmlNode(Dom\HtmlNode $node)
