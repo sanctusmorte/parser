@@ -195,7 +195,7 @@ class ThumbsService
             if (count($items) > 0) {
                 foreach ($items as $item) {
                     $itemName = strtolower($item);
-                    if (strlen($itemName) < 2) {
+                    if (strlen($itemName) < 3) {
                         continue;
                     }
                     if (!isset($needTitles[$itemName])) {
