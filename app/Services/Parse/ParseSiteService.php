@@ -11,6 +11,7 @@ use App\Models\LinkData;
 use App\Models\Site;
 use App\Services\DOMService;
 use App\Services\GuzzleService;
+use App\Services\HelperService;
 use App\Services\Links\LinksService;
 use App\Services\Parse\Exceptions\ParseSiteBadResponseException;
 use App\Services\Proxy\ProxyService;
@@ -304,17 +305,22 @@ class ParseSiteService
             return SiteTypeEnum::VIDEOS;
         }
 
-        $needLinks = [];
+        $needTitles = [];
 
         foreach ($links as $link) {
             if (str_word_count($link['title']) <= 4) {
-                $needLinks[] = $link['title'];
+                $words = HelperService::divideTextBySeparators($link['title']);
+                foreach ($words as $word) {
+                    if (!isset($needTitles[$word])) {
+                        $needTitles[$word] = $word;
+                    }
+                }
             }
         }
 
-        if (count($needLinks)/count($links) < 0.7) {
-            $foundTagsCount = $this->thumbsService->getTagsCountByHrefTitles($links);
-            dd($foundTagsCount, $links, $needLinks);
+        if (count($needTitles)/count($links) < 0.7) {
+            $foundTagsCount = $this->thumbsService->getTagsCountByHrefTitles($needTitles);
+            dd($foundTagsCount, $links, $needTitles);
         }
 
         dd($needLinks, $links);
